@@ -10,7 +10,7 @@ NULL
 #'
 AvailableData <- function() {
   UpdateManifest()
-  return(manifest)
+  return(pkg.env$manifest)
 }
 
 #' Install a dataset
@@ -24,7 +24,7 @@ AvailableData <- function() {
 #'
 InstallData <- function(pkgs, ...) {
   UpdateManifest()
-  pkgs <- pkgs[pkgs %in% manifest]
+  pkgs <- pkgs[pkgs %in% pkg.env$manifest]
   if (length(x = pkgs) < 1) {
     stop("No datasets provided", call. = FALSE)
   }
@@ -36,7 +36,7 @@ InstallData <- function(pkgs, ...) {
   )
   for (pkg in pkgs) {
     attachNamespace(ns = pkg)
-    attached <<- c(attached, pkg)
+    pkg.env$attached <- c(pkg.env$attached, pkg)
   }
 }
 
@@ -48,7 +48,7 @@ InstallData <- function(pkgs, ...) {
 #'
 InstalledData <- function() {
   installed <- vector(mode = 'character')
-  for (pkg in manifest) {
+  for (pkg in pkg.env$manifest) {
     if (requireNamespace(pkg, quietly = TRUE)) {
       installed <- c(installed, pkg)
     }
@@ -65,7 +65,7 @@ InstalledData <- function() {
 #'
 RemoveData <- function(pkgs, lib) {
   UpdateManifest()
-  pkgs <- pkgs[pkgs %in% manifest]
+  pkgs <- pkgs[pkgs %in% pkg.env$manifest]
   if (length(x = pkgs) < 1) {
     stop("No datasets provided", call. = FALSE)
   }
@@ -82,6 +82,6 @@ UpdateManifest <- function() {
     contriburl = paste(repo.use, 'src/contrib', sep = '/'),
     type = 'source'
   )
-  manifest <<- rownames(x = avail.pkgs)
+  pkg.env$manifest <- rownames(x = avail.pkgs)
   invisible(x = NULL)
 }

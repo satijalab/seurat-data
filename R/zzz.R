@@ -1,20 +1,20 @@
-manifest <- vector(mode = 'character')
-
-attached <- vector(mode = 'character')
+pkg.env <- new.env()
+pkg.env$manifest <- vector(mode = 'character')
+pkg.env$attached <- vector(mode = 'character')
 
 .onLoad <- function(libname, pkgname) {
   UpdateManifest()
-  for (pkg in manifest) {
+  for (pkg in pkg.env$manifest) {
     if (requireNamespace(pkg, quietly = TRUE)) {
       message("Attaching ", pkg)
       try(expr = attachNamespace(ns = pkg), silent = TRUE)
-      attached <<- c(attached, pkg)
+      pkg.env$attached <- c(pkg.env$attached, pkg)
     }
   }
 }
 
 .onUnload <- function(libpath) {
-  for (pkg in attached) {
+  for (pkg in pkg.env$attached) {
     message("Detaching ", pkg)
     unloadNamespace(ns = pkg)
   }
