@@ -74,11 +74,11 @@ RemoveData <- function(pkgs, lib) {
 
 #' Update the available package manifest
 #'
-#' @importFrom utils available.packages contrib.url
+#' @importFrom utils available.packages
 #'
 UpdateManifest <- function() {
   avail.pkgs <- available.packages(
-    contriburl = contrib.url(repos = repo.use, type = 'source'),
+    repos = repo.use,
     type = 'source'
   )
   pkg.env$manifest <- rownames(x = avail.pkgs)
