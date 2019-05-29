@@ -1,3 +1,4 @@
+repo.use <- 'http://satijalab04.nygenome.org'
 pkg.env <- new.env()
 pkg.env$manifest <- vector(mode = 'character')
 pkg.env$attached <- vector(mode = 'character')

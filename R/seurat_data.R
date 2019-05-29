@@ -30,7 +30,7 @@ InstallData <- function(pkgs, ...) {
   }
   install.packages(
     pkgs = pkgs,
-    repos = 'http://satijalab04.nygenome.org',
+    repos = repo.use,
     type = 'source',
     ...
   )
@@ -74,12 +74,11 @@ RemoveData <- function(pkgs, lib) {
 
 #' Update the available package manifest
 #'
-#' @importFrom utils available.packages
+#' @importFrom utils available.packages contrib.url
 #'
 UpdateManifest <- function() {
-  repo.use <- 'http://satijalab04.nygenome.org'
   avail.pkgs <- available.packages(
-    contriburl = paste(repo.use, 'src/contrib', sep = '/'),
+    contriburl = contrib.url(repos = repo.use, type = 'source'),
     type = 'source'
   )
   pkg.env$manifest <- rownames(x = avail.pkgs)
