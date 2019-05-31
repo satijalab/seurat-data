@@ -5,9 +5,9 @@ pkg.env$attached <- vector(mode = 'character')
 
 .onLoad <- function(libname, pkgname) {
   UpdateManifest()
-  for (pkg in pkg.env$manifest) {
+  for (pkg in rownames(x = pkg.env$manifest)) {
     if (requireNamespace(pkg, quietly = TRUE)) {
-      message("Attaching ", pkg)
+      message("Attaching ", pkg.env$manifest[pkg, 'Dataset', drop = TRUE])
       try(expr = attachNamespace(ns = pkg), silent = TRUE)
       pkg.env$attached <- c(pkg.env$attached, pkg)
     }
