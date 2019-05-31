@@ -19,7 +19,7 @@ pkg.env$attached <- vector(mode = 'character')
 
 .onUnload <- function(libpath) {
   for (pkg in pkg.env$attached) {
-    message("Detaching ", pkg)
+    message("Detaching ", pkg.env$manifest[pkg, 'Dataset', drop = TRUE])
     unloadNamespace(ns = pkg)
   }
 }
