@@ -49,11 +49,12 @@ InstallData <- function(pkgs, ...) {
 #'
 InstalledData <- function() {
   installed <- vector(mode = 'character')
-  for (pkg in pkg.env$manifest$Dataset) {
+  for (pkg in rownames(x = pkg.env$manifest)) {
     if (requireNamespace(pkg, quietly = TRUE)) {
       installed <- c(installed, pkg)
     }
   }
+  installed <- gsub(pattern = '\\.SeuratData$', replacement = '', x = installed)
   return(installed)
 }
 
