@@ -4,9 +4,18 @@ NULL
 
 #' Get list of available datasets
 #'
-#' @return A vector of dataset names
+#' @return A dataframe with available Seurat datasets. Rownames of the dataframe are the actual package names
+#' \describe{
+#'   \item{Dataset}{Name of dataset, usable for other functions in SeuratData (eg. \code{\link{InstallData}})}
+#'   \item{Version}{Version of dataset, generally corresponds to version of Seurat dataset was built with}
+#'   \item{Installed}{Is the dataset installed?}
+#' }
+#'
+#' Other columns are extra metadata, and may change as new datasets are made available
 #'
 #' @export
+#'
+#' @seealso \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
 #'
 AvailableData <- function() {
   UpdateManifest()
@@ -18,9 +27,13 @@ AvailableData <- function() {
 #' @param pkgs List of datasets to install
 #' @param ... Extra parameters passed to \code{\link[utils]{install.packages}}
 #'
+#' @return Invisible \code{NULL}
+#'
 #' @importFrom utils install.packages
 #'
 #' @export
+#'
+#' @seealso \code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
 #'
 InstallData <- function(pkgs, ...) {
   UpdateManifest()
@@ -39,31 +52,40 @@ InstallData <- function(pkgs, ...) {
     attachNamespace(ns = pkg)
     pkg.env$attached <- c(pkg.env$attached, pkg)
   }
+  UpdateManifest()
+  invisible(x = NULL)
 }
 
 #' Get a list of installed datasets
 #'
-#' @return A vector of installed datasets
+#' @return A dataframe with installed Seurat datasets. Rownames of the dataframe are the actual package names
+#' \describe{
+#'   \item{Dataset}{Name of dataset, usable for other functions in SeuratData (eg. \code{\link{InstallData}})}
+#'   \item{Version}{Version of dataset, generally corresponds to version of Seurat dataset was built with}
+#'   \item{Installed}{Is the dataset installed?}
+#' }
+#'
+#' Other columns are extra metadata, and may change as new datasets are made available
 #'
 #' @export
 #'
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{RemoveData}}
+#'
 InstalledData <- function() {
-  installed <- vector(mode = 'character')
-  for (pkg in rownames(x = pkg.env$manifest)) {
-    if (requireNamespace(pkg, quietly = TRUE)) {
-      installed <- c(installed, pkg)
-    }
-  }
-  installed <- gsub(pattern = '\\.SeuratData$', replacement = '', x = installed)
-  return(installed)
+  dat <- AvailableData()
+  return(dat[which(x = dat$Installed, ), , drop = FALSE])
 }
 
 #' Remove a dataset
 #'
 #' @inheritDotParams utils::remove.packages
-#' @param pkgs List of dataset to remove
+#' @param pkgs List of datasets to remove
 #'
 #' @importFrom utils remove.packages
+#'
+#' @export
+#'
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}}
 #'
 RemoveData <- function(pkgs, lib) {
   UpdateManifest()
@@ -134,6 +156,12 @@ UpdateManifest <- function() {
   avail.pkgs <- lapply(X = avail.pkgs, FUN = as.data.frame, stringsAsFactors = FALSE)
   avail.pkgs <- do.call(what = 'rbind', args = avail.pkgs)
   avail.pkgs$Version <- package_version(x = avail.pkgs$Version)
+  avail.pkgs$Installed <- vapply(
+    X = rownames(x = avail.pkgs),
+    FUN = requireNamespace,
+    FUN.VALUE = logical(length = 1L),
+    quietly = TRUE,
+  )
   pkg.env$manifest <- avail.pkgs
   invisible(x = NULL)
 }
