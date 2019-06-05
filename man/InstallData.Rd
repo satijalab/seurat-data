@@ -11,6 +11,12 @@ InstallData(pkgs, ...)
 
 \item{...}{Extra parameters passed to \code{\link[utils]{install.packages}}}
 }
+\value{
+Invisible \code{NULL}
+}
 \description{
 Install a dataset
+}
+\seealso{
+\code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
 }

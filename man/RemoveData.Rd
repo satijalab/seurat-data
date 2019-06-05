@@ -7,16 +7,15 @@
 RemoveData(pkgs, lib)
 }
 \arguments{
-\item{pkgs}{List of dataset to remove}
+\item{pkgs}{List of datasets to remove}
 
-\item{...}{Arguments passed on to \code{utils::remove.packages}
-\describe{
-  \item{pkgs}{a character vector with the names of the packages to be removed.}
-  \item{lib}{a character vector giving the library directories to remove the
+\item{lib}{a character vector giving the library directories to remove the
     packages from.  If missing, defaults to the first element in
     \code{\link{.libPaths}()}.}
-}}
 }
 \description{
 Remove a dataset
+}
+\seealso{
+\code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}}
 }

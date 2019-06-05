@@ -7,8 +7,19 @@
 InstalledData()
 }
 \value{
-A vector of installed datasets
+A dataframe with installed Seurat datasets. Rownames of the dataframe are the actual package names
+\describe{
+  \item{Dataset}{Name of dataset, usable for other functions in SeuratData (eg. \code{\link{InstallData}})}
+  \item{Version}{Version of dataset, generally corresponds to version of Seurat dataset was built with}
+  \item{Installed}{Is the dataset installed?}
+  \item{InstalledVersion}{Version of dataset installed}
+}
+
+Other columns are extra metadata, and may change as new datasets are made available
 }
 \description{
 Get a list of installed datasets
+}
+\seealso{
+\code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{RemoveData}}
 }
