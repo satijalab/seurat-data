@@ -1,11 +1,18 @@
 Package: SeuratData
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Install and Manage Seurat Datasets
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Date: 2019-07-01
+Authors@R: c(
+  person(given = 'Rahul', family = 'Satija', email = 'rsatija@nygenome.org', role = 'aut', comment = c(ORCID = '0000-0001-9448-8833')),
+  person(given = 'Paul', family = 'Hoffman', email = 'phoffman@nygenome.org', role = c('aut', 'cre'), comment = c(ORCID = '0000-0002-7693-8957'))
+  )
+Description: Single cell RNA sequencing datasets can be large, consisting of matrices
+    that contain expression data for several thousand features across several thousand
+    cells. This package is designed to easily install, manage, and learn about various single-cell
+    datasets, provided Seurat objects and distributed as independent packages.
+URL: http://www.satijalab.org/seurat, https://github.com/satijalab/seurat-data
+BugReports: https://github.com/satijalab/seurat-data/issues
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
