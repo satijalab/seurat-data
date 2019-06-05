@@ -9,6 +9,7 @@ NULL
 #'   \item{Dataset}{Name of dataset, usable for other functions in SeuratData (eg. \code{\link{InstallData}})}
 #'   \item{Version}{Version of dataset, generally corresponds to version of Seurat dataset was built with}
 #'   \item{Installed}{Is the dataset installed?}
+#'   \item{InstalledVersion}{Version of dataset installed, \code{NA} if not installed}
 #' }
 #'
 #' Other columns are extra metadata, and may change as new datasets are made available
@@ -63,6 +64,7 @@ InstallData <- function(pkgs, ...) {
 #'   \item{Dataset}{Name of dataset, usable for other functions in SeuratData (eg. \code{\link{InstallData}})}
 #'   \item{Version}{Version of dataset, generally corresponds to version of Seurat dataset was built with}
 #'   \item{Installed}{Is the dataset installed?}
+#'   \item{InstalledVersion}{Version of dataset installed}
 #' }
 #'
 #' Other columns are extra metadata, and may change as new datasets are made available
@@ -78,7 +80,7 @@ InstalledData <- function() {
 
 #' Remove a dataset
 #'
-#' @inheritDotParams utils::remove.packages
+#' @inheritParams utils::remove.packages
 #' @param pkgs List of datasets to remove
 #'
 #' @importFrom utils remove.packages
@@ -96,72 +98,18 @@ RemoveData <- function(pkgs, lib) {
   remove.packages(pkgs = pkgs, lib = lib)
 }
 
-#' Update the available package manifest
+#' Update datasets
 #'
-#' @importFrom utils available.packages
+#' @inheritParams utils::update.packages
 #'
-UpdateManifest <- function() {
-  avail.pkgs <- available.packages(
-    repos = repo.use,
-    type = 'source',
-    fields = 'Description'
-  )
-  avail.pkgs <- as.data.frame(x = avail.pkgs, stringsAsFactors = FALSE)
-  avail.pkgs <- subset(
-    x = avail.pkgs,
-    subset = grepl(pattern = '\\.SeuratData', x = Package)
-  )
-  avail.pkgs <- apply(
-    X = avail.pkgs,
-    MARGIN = 1,
-    FUN = function(pkg) {
-      dataset <- gsub(
-        pattern = '\\.SeuratData$',
-        replacement = '',
-        x = pkg[['Package']]
-      )
-      # version <- package_version(x = pkg[['Version']])
-      desc <- unlist(x = strsplit(x = pkg[['Description']], split = '\n'))
-      desc <- sapply(
-        X = strsplit(x = desc, split = ':'),
-        FUN = function(x) {
-          name <- trimws(x = x[[1]])
-          val <- trimws(x = unlist(x = strsplit(x = x[[2]], split = ',')))
-          val <- paste(val, collapse = ', ')
-          names(x = val) <- name
-          return(val)
-        }
-      )
-      desc <- sapply(
-        X = desc,
-        FUN = function(x) {
-          x <- tryCatch(
-            expr = as.numeric(x = x),
-            warning = function(...) {
-              return(x)
-            }
-          )
-          if (!is.numeric(x = x) && !is.na(x = as.logical(x = x))) {
-            x <- as.logical(x = x)
-          }
-          return(x)
-        },
-        simplify = FALSE,
-        USE.NAMES = TRUE
-      )
-      desc <- c('Dataset' = dataset, 'Version' = pkg[['Version']], desc)
-      return(desc)
-    }
-  )
-  avail.pkgs <- lapply(X = avail.pkgs, FUN = as.data.frame, stringsAsFactors = FALSE)
-  avail.pkgs <- do.call(what = 'rbind', args = avail.pkgs)
-  avail.pkgs$Version <- package_version(x = avail.pkgs$Version)
-  avail.pkgs$Installed <- vapply(
-    X = rownames(x = avail.pkgs),
-    FUN = requireNamespace,
-    FUN.VALUE = logical(length = 1L),
-    quietly = TRUE,
-  )
-  pkg.env$manifest <- avail.pkgs
+#' @return Invisible \code{NULL}
+#'
+#' @importFrom utils update.packages
+#'
+#' @export
+#'
+UpdateData <- function(ask = TRUE, lib.loc = NULL) {
+  update.packages(lib.loc = lib.loc, repos = repo.use, ask = ask, type = 'source')
+  UpdateManifest()
   invisible(x = NULL)
 }
