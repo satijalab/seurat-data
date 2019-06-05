@@ -20,6 +20,74 @@ pkg.env$attached <- vector(mode = 'character')
 # Internal functions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+#' Attach datasets
+#'
+#' @return Invisible \code{NULL}
+#'
+#' @importFrom cli rule symbol
+#' @importFrom utils packageVersion
+#' @importFrom crayon bold red green yellow blue col_align col_nchar
+#'
+#' @keywords internal
+#'
+AttachData <- function() {
+  installed <- InstalledData()
+  installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
+  if (nrow(x = installed) < 1) {
+    return(invisible(x = NULL))
+  }
+  seurat.version <- tryCatch(
+    expr = packageVersion(pkg = 'Seurat'),
+    error = function(...) {
+      return(NA)
+    }
+  )
+  header <- rule(
+    left = bold('Attaching datasets'),
+    right = paste0('SeuratData v', packageVersion(pkg = 'SeuratData'))
+  )
+  symbols <- if (is.na(x = seurat.version)) {
+    red(symbol$fancy_question_mark)
+  } else {
+    c(green(symbol$tick), yellow(symbol$pointer))[(installed$InstalledVersion < seurat.version) + 1]
+  }
+  packageStartupMessage(header)
+  pkgs <- paste(
+    symbols,
+    blue(format(x = installed$Dataset)),
+    col_align(text = installed$InstalledVersion, width = max(col_nchar(x = installed$InstalledVersion)))
+  )
+  if (length(x = pkgs) %% 2 == 1) {
+    pkgs <- c(pkgs, '')
+  }
+  col.1 <- seq_len(length.out = length(x = pkgs) / 2)
+  space.start <- floor(min(
+    col_nchar(x = header) - max(col_nchar(x = pkgs[-col.1])),
+    col_nchar(x = header) * (1 / 2)
+  ))
+  space <- paste(
+    rep_len(
+      x = ' ',
+      length.out = max(space.start - max(col_nchar(x = pkgs[col.1])), 1)
+    ),
+    collapse = ''
+  )
+  info <- paste0(pkgs[col.1], space, pkgs[-col.1])
+  packageStartupMessage(paste(info, collapse = '\n'), '\n')
+  packageStartupMessage(rule(center = 'Key'))
+  packageStartupMessage(paste(
+    c(green(symbol$tick), yellow(symbol$pointer), red(symbol$fancy_question_mark)),
+    c('Dataset loaded succesfully', 'Dataset built with a newer version of Seurat than installed', 'Unknown version of Seurat installed'),
+    collapse = '\n'
+  ))
+  suppressPackageStartupMessages(expr = lapply(
+    X = rownames(x = installed),
+    FUN = attachNamespace
+  ))
+  pkg.env$attached <- rownames(x = installed)
+  invisible(x = NULL)
+}
+
 #' Update the available package manifest
 #'
 #' @return Nothing, updates the manifest in the package environment
@@ -111,51 +179,6 @@ UpdateManifest <- function() {
 # Hooks
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' @importFrom utils packageVersion
-#'
-.onLoad <- function(libname, pkgname) {
-  installed <- InstalledData()
-  seurat.version <- tryCatch(
-    expr = packageVersion(pkg = 'Seurat'),
-    error = function(...) {
-      return(NA)
-    }
-  )
-  for (pkg in rownames(x = installed)) {
-    dataset <- installed[pkg, 'Dataset', drop = TRUE]
-    pkg.version <- installed[pkg, 'InstalledVersion', drop = TRUE]
-    avail.version <- installed[pkg, 'Version', drop = TRUE]
-    if (pkg.version < avail.version) {
-      packageStartupMessage(
-        "A new version of ",
-        dataset,
-        " is available, please see UpdateData for help updating your datasets"
-      )
-    }
-    if (!paste0('package', pkg) %in% search()) {
-      packageStartupMessage("Attaching ", dataset)
-      try(expr = attachNamespace(ns = pkg), silent = TRUE)
-      pkg.env$attached <- c(pkg.env$attached, pkg)
-    }
-    if (!is.na(x = seurat.version) && seurat.version < pkg.version) {
-      warning(
-        "Dataset ",
-        dataset,
-        " was built using a newer version of Seurat than currently installed (",
-        pkg.version,
-        " vs ",
-        seurat.version,
-        ")",
-        call. = FALSE,
-        immediate. = TRUE
-      )
-    }
-  }
-}
-
-.onUnload <- function(libpath) {
-  for (pkg in pkg.env$attached) {
-    message("Detaching ", pkg.env$manifest[pkg, 'Dataset', drop = TRUE])
-    unloadNamespace(ns = pkg)
-  }
+.onAttach <- function(libname, pkgname) {
+  AttachData()
 }
