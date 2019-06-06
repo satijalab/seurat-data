@@ -4,10 +4,10 @@
 \alias{RemoveData}
 \title{Remove a dataset}
 \usage{
-RemoveData(pkgs, lib)
+RemoveData(ds, lib)
 }
 \arguments{
-\item{pkgs}{List of datasets to remove}
+\item{ds}{List of datasets to remove}
 
 \item{lib}{a character vector giving the library directories to remove the
     packages from.  If missing, defaults to the first element in
@@ -17,5 +17,5 @@ RemoveData(pkgs, lib)
 Remove a dataset
 }
 \seealso{
-\code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}}
+\code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{UpdateData}}
 }

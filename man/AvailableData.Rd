@@ -21,5 +21,5 @@ Other columns are extra metadata, and may change as new datasets are made availa
 Get list of available datasets
 }
 \seealso{
-\code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
+\code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
 }

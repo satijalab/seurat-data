@@ -22,6 +22,8 @@ pkg.env$attached <- vector(mode = 'character')
 
 #' Attach datasets
 #'
+#' @param pkgname Name of package
+#'
 #' @return Invisible \code{NULL}
 #'
 #' @importFrom cli rule symbol
@@ -30,7 +32,7 @@ pkg.env$attached <- vector(mode = 'character')
 #'
 #' @keywords internal
 #'
-AttachData <- function() {
+AttachData <- function(pkgname = 'SeuratData') {
   installed <- InstalledData()
   installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
   if (nrow(x = installed) < 1) {
@@ -44,7 +46,7 @@ AttachData <- function() {
   )
   header <- rule(
     left = bold('Attaching datasets'),
-    right = paste0('SeuratData v', packageVersion(pkg = 'SeuratData'))
+    right = paste0(pkgname, ' v', packageVersion(pkg = 'SeuratData'))
   )
   symbols <- if (is.na(x = seurat.version)) {
     red(symbol$fancy_question_mark)
@@ -75,17 +77,53 @@ AttachData <- function() {
   info <- paste0(pkgs[col.1], space, pkgs[-col.1])
   packageStartupMessage(paste(info, collapse = '\n'), '\n')
   packageStartupMessage(rule(center = 'Key'))
-  packageStartupMessage(paste(
-    c(green(symbol$tick), yellow(symbol$pointer), red(symbol$fancy_question_mark)),
-    c('Dataset loaded succesfully', 'Dataset built with a newer version of Seurat than installed', 'Unknown version of Seurat installed'),
-    collapse = '\n'
-  ))
+  packageStartupMessage(
+    paste(
+      c(green(symbol$tick), yellow(symbol$pointer), red(symbol$fancy_question_mark)),
+      c(
+        'Dataset loaded succesfully',
+        'Dataset built with a newer version of Seurat than installed',
+        'Unknown version of Seurat installed'
+      ),
+      collapse = '\n'
+    ),
+    '\n'
+  )
   suppressPackageStartupMessages(expr = lapply(
     X = rownames(x = installed),
     FUN = attachNamespace
   ))
   pkg.env$attached <- rownames(x = installed)
   invisible(x = NULL)
+}
+
+#' Find dataset packages based on name
+#'
+#' @param ds Names of datasets
+#'
+#' @return A vector of package names based on dataset names
+#'
+#' @keywords internal
+#'
+NameToPackage <- function(ds) {
+  avail.pkgs <- AvailableData()
+  ds.use <- ds %in% c(rownames(x = avail.pkgs), avail.pkgs$Dataset)
+  if (sum(x = ds.use) != length(x = ds)) {
+    warning(
+      "The following datasets are not available: ",
+      paste(ds[!ds.use], collapse = ', '),
+      call. = FALSE,
+      immediate. = TRUE
+    )
+  }
+  ds <- ds[ds.use]
+  ds.replace <- which(x = ds %in% avail.pkgs$Dataset)
+  pkg.replace <- which(x = avail.pkgs$Dataset %in% ds[ds.replace])
+  ds[ds.replace] <- rownames(x = avail.pkgs)[pkg.replace]
+  if (length(x = ds) < 1) {
+    stop("No SeuratData datasets provided", call. = FALSE)
+  }
+  return(ds)
 }
 
 #' Update the available package manifest
@@ -113,7 +151,6 @@ UpdateManifest <- function() {
         replacement = '',
         x = pkg[['Package']]
       )
-      # version <- package_version(x = pkg[['Version']])
       desc <- unlist(x = strsplit(x = pkg[['Description']], split = '\n'))
       desc <- sapply(
         X = strsplit(x = desc, split = ':'),
@@ -180,5 +217,5 @@ UpdateManifest <- function() {
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 .onAttach <- function(libname, pkgname) {
-  AttachData()
+  AttachData(pkgname = pkgname)
 }

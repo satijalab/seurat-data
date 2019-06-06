@@ -4,10 +4,10 @@
 \alias{InstallData}
 \title{Install a dataset}
 \usage{
-InstallData(pkgs, ...)
+InstallData(ds, ...)
 }
 \arguments{
-\item{pkgs}{List of datasets to install}
+\item{ds}{List of datasets to install}
 
 \item{...}{Extra parameters passed to \code{\link[utils]{install.packages}}}
 }
@@ -18,5 +18,5 @@ Invisible \code{NULL}
 Install a dataset
 }
 \seealso{
-\code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
+\code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
 }

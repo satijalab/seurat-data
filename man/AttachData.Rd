@@ -4,7 +4,10 @@
 \alias{AttachData}
 \title{Attach datasets}
 \usage{
-AttachData()
+AttachData(pkgname = "SeuratData")
+}
+\arguments{
+\item{pkgname}{Name of package}
 }
 \value{
 Invisible \code{NULL}

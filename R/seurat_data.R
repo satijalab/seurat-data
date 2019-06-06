@@ -16,7 +16,7 @@ NULL
 #'
 #' @export
 #'
-#' @seealso \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
+#' @seealso \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
 #'
 AvailableData <- function() {
   UpdateManifest()
@@ -25,7 +25,7 @@ AvailableData <- function() {
 
 #' Install a dataset
 #'
-#' @param pkgs List of datasets to install
+#' @param ds List of datasets to install
 #' @param ... Extra parameters passed to \code{\link[utils]{install.packages}}
 #'
 #' @return Invisible \code{NULL}
@@ -34,21 +34,12 @@ AvailableData <- function() {
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
 #'
-InstallData <- function(pkgs, ...) {
+InstallData <- function(ds, ...) {
   UpdateManifest()
-  pkgs <- pkgs[pkgs %in% pkg.env$manifest$Dataset]
-  if (length(x = pkgs) < 1) {
-    stop("No datasets provided", call. = FALSE)
-  }
-  pkgs <- paste0(pkgs, '.SeuratData')
-  install.packages(
-    pkgs = pkgs,
-    repos = repo.use,
-    type = 'source',
-    ...
-  )
+  pkgs <- NameToPackage(ds = ds)
+  install.packages(pkgs = pkgs, repos = repo.use, type = 'source', ...)
   for (pkg in pkgs) {
     attachNamespace(ns = pkg)
     pkg.env$attached <- c(pkg.env$attached, pkg)
@@ -71,7 +62,7 @@ InstallData <- function(pkgs, ...) {
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{RemoveData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
 #'
 InstalledData <- function() {
   dat <- AvailableData()
@@ -81,20 +72,17 @@ InstalledData <- function() {
 #' Remove a dataset
 #'
 #' @inheritParams utils::remove.packages
-#' @param pkgs List of datasets to remove
+#' @param ds List of datasets to remove
 #'
 #' @importFrom utils remove.packages
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{UpdateData}}
 #'
-RemoveData <- function(pkgs, lib) {
+RemoveData <- function(ds, lib) {
   UpdateManifest()
-  pkgs <- pkgs[pkgs %in% pkg.env$manifest$Dataset]
-  if (length(x = pkgs) < 1) {
-    stop("No datasets provided", call. = FALSE)
-  }
+  pkgs <- NameToPackage(ds = ds)
   remove.packages(pkgs = pkgs, lib = lib)
 }
 
@@ -107,6 +95,8 @@ RemoveData <- function(pkgs, lib) {
 #' @importFrom utils update.packages
 #'
 #' @export
+#'
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
 #'
 UpdateData <- function(ask = TRUE, lib.loc = NULL) {
   update.packages(lib.loc = lib.loc, repos = repo.use, ask = ask, type = 'source')

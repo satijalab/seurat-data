@@ -26,3 +26,6 @@ Invisible \code{NULL}
 \description{
 Update datasets
 }
+\seealso{
+\code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
+}
