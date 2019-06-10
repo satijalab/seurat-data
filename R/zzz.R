@@ -26,6 +26,7 @@ pkg.env$attached <- vector(mode = 'character')
 #'
 #' @return Invisible \code{NULL}
 #'
+#' @importFrom stats na.omit
 #' @importFrom cli rule symbol
 #' @importFrom utils packageVersion
 #' @importFrom crayon bold red green yellow blue col_align col_nchar
@@ -35,6 +36,7 @@ pkg.env$attached <- vector(mode = 'character')
 AttachData <- function(pkgname = 'SeuratData') {
   installed <- InstalledData()
   installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
+  installed <- na.omit(object = installed)
   if (nrow(x = installed) < 1) {
     return(invisible(x = NULL))
   }
