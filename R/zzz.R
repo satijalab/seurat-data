@@ -53,7 +53,7 @@ AttachData <- function(pkgname = 'SeuratData') {
   symbols <- if (is.na(x = seurat.version)) {
     red(symbol$fancy_question_mark)
   } else {
-    c(green(symbol$tick), yellow(symbol$pointer))[(installed$InstalledVersion < seurat.version) + 1]
+    c(green(symbol$tick), yellow(symbol$pointer))[(installed$InstalledVersion > seurat.version) + 1]
   }
   packageStartupMessage(header)
   pkgs <- paste(
