@@ -20,13 +20,32 @@ pkg.env$attached <- vector(mode = 'character')
 # Internal functions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+#' Set a default value if an object is null
+#'
+#' @param lhs An object to set if it's null
+#' @param rhs The value to provide if x is null
+#'
+#' @return rhs if lhs is null, else lhs
+#'
+#' @author Hadley Wickham
+#' @references https://adv-r.hadley.nz/functions.html#missing-arguments
+#'
+#' @keywords internal
+#'
+`%||%` <- function(lhs, rhs) {
+  if (!is.null(x = lhs)) {
+    return(lhs)
+  } else {
+    return(rhs)
+  }
+}
+
 #' Attach datasets
 #'
 #' @param pkgname Name of package
 #'
 #' @return Invisible \code{NULL}
 #'
-#' @importFrom stats na.omit
 #' @importFrom cli rule symbol
 #' @importFrom utils packageVersion
 #' @importFrom crayon bold red green yellow blue col_align col_nchar
@@ -35,11 +54,10 @@ pkg.env$attached <- vector(mode = 'character')
 #'
 AttachData <- function(pkgname = 'SeuratData') {
   installed <- InstalledData()
-  installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
-  installed <- na.omit(object = installed)
   if (nrow(x = installed) < 1) {
     return(invisible(x = NULL))
   }
+  installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
   seurat.version <- tryCatch(
     expr = packageVersion(pkg = 'Seurat'),
     error = function(...) {
@@ -48,7 +66,7 @@ AttachData <- function(pkgname = 'SeuratData') {
   )
   header <- rule(
     left = bold('Attaching datasets'),
-    right = paste0(pkgname, ' v', packageVersion(pkg = 'SeuratData'))
+    right = paste0(pkgname, ' v', packageVersion(pkg = pkgname))
   )
   symbols <- if (is.na(x = seurat.version)) {
     red(symbol$fancy_question_mark)
@@ -140,7 +158,8 @@ UpdateManifest <- function() {
   avail.pkgs <- available.packages(
     repos = repo.use,
     type = 'source',
-    fields = 'Description'
+    fields = 'Description',
+    ignore_repo_cache = TRUE
   )
   avail.pkgs <- as.data.frame(x = avail.pkgs, stringsAsFactors = FALSE)
   avail.pkgs <- avail.pkgs[grepl(pattern = '\\.SeuratData$', x = avail.pkgs$Package), , drop = FALSE]
@@ -185,6 +204,15 @@ UpdateManifest <- function() {
       return(desc)
     }
   )
+  manifest.names <- unique(x = unlist(
+    x = lapply(X = avail.pkgs, FUN = names),
+    use.names = FALSE
+  ))
+  for (pkg in names(x = avail.pkgs)) {
+    for (col in manifest.names) {
+      avail.pkgs[[pkg]][[col]] <- avail.pkgs[[pkg]][[col]] %||% NA
+    }
+  }
   avail.pkgs <- lapply(X = avail.pkgs, FUN = as.data.frame, stringsAsFactors = FALSE)
   avail.pkgs <- do.call(what = 'rbind', args = avail.pkgs)
   avail.pkgs$Version <- package_version(x = avail.pkgs$Version)
