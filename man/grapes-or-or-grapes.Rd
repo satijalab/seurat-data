@@ -18,7 +18,7 @@ rhs if lhs is null, else lhs
 Set a default value if an object is null
 }
 \references{
-https://adv-r.hadley.nz/functions.html#missing-arguments
+\url{https://adv-r.hadley.nz/functions.html#missing-arguments}
 }
 \author{
 Hadley Wickham
