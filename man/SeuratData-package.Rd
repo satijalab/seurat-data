@@ -11,6 +11,17 @@ Single cell RNA sequencing datasets can be large, consisting of matrices
     cells. This package is designed to easily install, manage, and learn about various single-cell
     datasets, provided Seurat objects and distributed as independent packages.
 }
+\section{Package options}{
+
+
+SeuratData uses the following [options()] to configure behaviour:
+
+\itemize{
+  \item `SeuratData.repo.use`: Set the location where the SeuratData datasets
+  are stored. Users generally should not modify.
+}
+}
+
 \seealso{
 Useful links:
 \itemize{
