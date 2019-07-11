@@ -39,6 +39,10 @@ AvailableData <- function() {
 InstallData <- function(ds, ...) {
   UpdateManifest()
   pkgs <- NameToPackage(ds = ds)
+  pkgs2 <- paste0('package:', pkgs)
+  for (p in pkgs2[pkgs2 %in% search()]) {
+    detach(name = p, unload = TRUE, character.only = TRUE)
+  }
   install.packages(pkgs = pkgs, repos = getOption(x = "SeuratData.repo.use"), type = 'source', ...)
   for (pkg in pkgs) {
     attachNamespace(ns = pkg)
@@ -83,6 +87,9 @@ InstalledData <- function() {
 RemoveData <- function(ds, lib) {
   UpdateManifest()
   pkgs <- NameToPackage(ds = ds)
+  for (p in pkgs) {
+    detach(name = p, unload = TRUE, character.only = TRUE)
+  }
   remove.packages(pkgs = pkgs, lib = lib)
 }
 

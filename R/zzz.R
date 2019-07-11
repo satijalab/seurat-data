@@ -21,11 +21,13 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 default.options <- list(
-  SeuratData.repo.use = 'http://satijalab04.nygenome.org/'
+  SeuratData.repo.use = 'http://satijalab04.nygenome.org/',
+  SeuratData.roaming = FALSE
 )
 
 pkg.env <- new.env()
-pkg.env$manifest <- vector(mode = 'character')
+pkg.env$manifest <- vector(mode = 'list')
+pkg.env$source <- vector(mode = 'character')
 pkg.env$attached <- vector(mode = 'character')
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -40,7 +42,7 @@ pkg.env$attached <- vector(mode = 'character')
 #' @return rhs if lhs is null, else lhs
 #'
 #' @author Hadley Wickham
-#' @references https://adv-r.hadley.nz/functions.html#missing-arguments
+#' @references \url{https://adv-r.hadley.nz/functions.html#missing-arguments}
 #'
 #' @keywords internal
 #'
@@ -50,6 +52,28 @@ pkg.env$attached <- vector(mode = 'character')
   } else {
     return(rhs)
   }
+}
+
+#' Get an application data directory
+#'
+#' @inheritParams AttachData
+#' @param author Author name for application
+#'
+#' @return A character vector with path to the application data dir
+#'
+#' @importFrom rappdirs user_data_dir
+#'
+#' @seealso \code{\link[rappdirs]{user_data_dir}}
+#'
+#' @keywords internal
+#'
+AppData <- function(pkgname = 'SeuratData', author = pkgname) {
+  return(user_data_dir(
+    appname = pkgname,
+    appauthor = author,
+    version = file.path('%p-platform', '%v'),
+    roaming = getOption(x = 'SeuratData.roaming', default = FALSE)
+  ))
 }
 
 #' Attach datasets
@@ -167,11 +191,25 @@ NameToPackage <- function(ds) {
 #' @keywords internal
 #'
 UpdateManifest <- function() {
-  avail.pkgs <- available.packages(
-    repos = getOption(x = "SeuratData.repo.use"),
-    type = 'source',
-    fields = 'Description',
-    ignore_repo_cache = TRUE
+  pkg.env$source <- 'remote'
+  avail.pkgs <- tryCatch(
+    expr = available.packages(
+      repos = getOption(x = "SeuratData.repo.use"),
+      type = 'source',
+      fields = 'Description',
+      ignore_repo_cache = TRUE
+    ),
+    warning = function(...) {
+      pkg.env$source <- ifelse(
+        test = file.exists(file.path(
+          AppData(pkgname = 'SeuratData', author = 'Satija Lab'),
+          'manifest.Rds'
+        )),
+        yes = 'appdir',
+        no = 'appdata'
+      )
+      # TODO: this
+    }
   )
   avail.pkgs <- as.data.frame(x = avail.pkgs, stringsAsFactors = FALSE)
   avail.pkgs <- avail.pkgs[grepl(pattern = '\\.SeuratData$', x = avail.pkgs$Package), , drop = FALSE]
