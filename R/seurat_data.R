@@ -69,6 +69,35 @@ InstalledData <- function() {
   return(dat[which(x = dat$Installed, ), , drop = FALSE])
 }
 
+#' Load a dynamic dataset
+#'
+#' @export
+#'
+#' @seealso \code{\link[base]{data}}
+#'
+LoadData <- function(
+  ds,
+  type = c('info', 'raw', 'processed'),
+  assays = NULL,
+  dimreducs = NULL,
+  graphs = NULL
+) {
+  installed <- InstalledData()
+  if (!NameToPackage(ds = ds) %in% rownames(x = installed)) {
+    stop("Cannot find dataset ", ds, call. = FALSE)
+  }
+  ds <- NameToPackage(ds = ds)
+  type <- match.arg(arg = type, choices = c('info', 'raw', 'processed'))
+  if (type == 'info') {
+    ''
+  } else if (type == 'raw') {
+    ''
+  } else if (type == 'processed') {
+    ''
+  }
+  return(invisible(x = NULL))
+}
+
 #' Remove a dataset
 #'
 #' @inheritParams utils::remove.packages

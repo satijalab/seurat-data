@@ -20,6 +20,7 @@ RoxygenNote: 6.1.1
 Imports:
     cli,
     crayon,
+    Seurat (>= 3.0.0),
     stats,
     utils
 Collate: 

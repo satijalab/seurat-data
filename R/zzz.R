@@ -28,7 +28,7 @@ pkg.env$attached <- vector(mode = 'character')
 #' @return rhs if lhs is null, else lhs
 #'
 #' @author Hadley Wickham
-#' @references https://adv-r.hadley.nz/functions.html#missing-arguments
+#' @references \url{https://adv-r.hadley.nz/functions.html#missing-arguments}
 #'
 #' @keywords internal
 #'
@@ -144,6 +144,66 @@ NameToPackage <- function(ds) {
     stop("No SeuratData datasets provided", call. = FALSE)
   }
   return(ds)
+}
+
+#' Save a Seurat object into component Rds files
+#'
+#' @param ... ...
+#'
+#' @return Invisibly return the directory that the Seurat object was stored in
+#'
+#' @importFrom Seurat Project
+#' @importFrom methods slotNames slot
+#'
+#' @keywords internal
+#'
+SaveSeuratObject <- function(
+  object,
+  directory = file.path(getwd(), Project(object = object))
+) {
+  if (!dir.exists(paths = directory)) {
+    dir.create(path = directory, recursive = TRUE)
+  }
+  names <- slotNames(x = object)
+  collections <- names(x = which(x = sapply(
+    X = names,
+    FUN = function(n) {
+      x <- slot(object = object, name = n)
+      return(is.list(x = x) && !is.data.frame(x = x))
+    }
+  )))
+  for (col in collections) {
+    obj <- slot(object = object, name = col)
+    s4 <- vapply(X = obj, FUN = isS4, FUN.VALUE = logical(length = 1L))
+    if (length(x = s4) > 0) {
+      if (all(s4)) {
+        for (i in 1:length(x = obj)) {
+          obj.name <- names(x = obj)[i]
+          message("Saving ", obj.name, " from ", col)
+          SaveSeuratObject(
+            object = obj[[i]],
+            directory = file.path(directory, col, obj.name)
+          )
+        }
+      } else {
+        message("Saving ", col)
+        saveRDS(
+          object = obj,
+          file = file.path(directory, paste0(col, '.Rds'))
+        )
+      }
+    } else {
+      ''
+    }
+  }
+  names <- setdiff(x = names, y = collections)
+  for (x in names) {
+    message("Saving ", x)
+    saveRDS(
+      object = slot(object = object, name = x),
+      file = file.path(directory, paste0(x, '.Rds'))
+    )
+  }
 }
 
 #' Update the available package manifest
