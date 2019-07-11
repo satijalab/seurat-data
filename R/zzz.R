@@ -1,5 +1,14 @@
 #' Install and manage Seurat datasets
 #'
+#' @section Package options:
+#'
+#' SeuratData uses the following [options()] to configure behaviour:
+#'
+#' \itemize{
+#'   \item `SeuratData.repo.use`: Set the location where the SeuratData datasets
+#'   are stored. Users generally should not modify.
+#' }
+#'
 #' @docType package
 #' @rdname SeuratData-package
 #' @name SeuratData-package
@@ -11,7 +20,10 @@
 # Global variables and environment
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-repo.use <- 'http://satijalab04.nygenome.org'
+default_options <- list(
+  SeuratData.repo.use = 'http://satijalab04.nygenome.org/'
+)
+
 pkg.env <- new.env()
 pkg.env$manifest <- vector(mode = 'character')
 pkg.env$attached <- vector(mode = 'character')
@@ -54,10 +66,10 @@ pkg.env$attached <- vector(mode = 'character')
 #'
 AttachData <- function(pkgname = 'SeuratData') {
   installed <- InstalledData()
+  installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
   if (nrow(x = installed) < 1) {
     return(invisible(x = NULL))
   }
-  installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
   seurat.version <- tryCatch(
     expr = packageVersion(pkg = 'Seurat'),
     error = function(...) {
@@ -156,7 +168,7 @@ NameToPackage <- function(ds) {
 #'
 UpdateManifest <- function() {
   avail.pkgs <- available.packages(
-    repos = repo.use,
+    repos = getOption(x = "SeuratData.repo.use"),
     type = 'source',
     fields = 'Description',
     ignore_repo_cache = TRUE
@@ -248,4 +260,11 @@ UpdateManifest <- function() {
 
 .onAttach <- function(libname, pkgname) {
   AttachData(pkgname = pkgname)
+}
+
+.onLoad <- function(libname, pkgname) {
+  op <- options()
+  toset <- !(names(x = default_options) %in% names(x = op))
+  if (any(toset)) options(default_options[toset])
+  invisible()
 }

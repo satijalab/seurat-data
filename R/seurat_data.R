@@ -39,7 +39,7 @@ AvailableData <- function() {
 InstallData <- function(ds, ...) {
   UpdateManifest()
   pkgs <- NameToPackage(ds = ds)
-  install.packages(pkgs = pkgs, repos = repo.use, type = 'source', ...)
+  install.packages(pkgs = pkgs, repos = getOption(x = "SeuratData.repo.use"), type = 'source', ...)
   for (pkg in pkgs) {
     attachNamespace(ns = pkg)
     pkg.env$attached <- c(pkg.env$attached, pkg)
@@ -99,7 +99,7 @@ RemoveData <- function(ds, lib) {
 #' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
 #'
 UpdateData <- function(ask = TRUE, lib.loc = NULL) {
-  update.packages(lib.loc = lib.loc, repos = repo.use, ask = ask, type = 'source')
+  update.packages(lib.loc = lib.loc, repos = getOption(x = "SeuratData.repo.use"), ask = ask, type = 'source')
   UpdateManifest()
   invisible(x = NULL)
 }
