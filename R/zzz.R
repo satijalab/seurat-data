@@ -20,7 +20,7 @@
 # Global variables and environment
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-default_options <- list(
+default.options <- list(
   SeuratData.repo.use = 'http://satijalab04.nygenome.org/'
 )
 
@@ -264,7 +264,9 @@ UpdateManifest <- function() {
 
 .onLoad <- function(libname, pkgname) {
   op <- options()
-  toset <- !(names(x = default_options) %in% names(x = op))
-  if (any(toset)) options(default_options[toset])
+  toset <- !(names(x = default.options) %in% names(x = op))
+  if (any(toset)) {
+    options(default.options[toset])
+  }
   invisible()
 }
