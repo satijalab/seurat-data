@@ -68,7 +68,7 @@ pkg.env$attached <- vector(mode = 'character')
 AttachData <- function(pkgname = 'SeuratData') {
   installed <- InstalledData()
   installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
-  installed <- na.omit(object = installed)
+  installed <- installed[grep(pattern = 'NA', x = rownames(x = installed), invert = TRUE), ]
   if (nrow(x = installed) < 1) {
     return(invisible(x = NULL))
   }
