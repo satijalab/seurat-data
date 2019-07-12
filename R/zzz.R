@@ -172,7 +172,7 @@ UpdateManifest <- function() {
   avail.pkgs <- available.packages(
     repos = getOption(x = "SeuratData.repo.use"),
     type = 'source',
-    fields = 'Description',
+    fields = c('Description', 'Title'),
     ignore_repo_cache = TRUE
   )
   avail.pkgs <- as.data.frame(x = avail.pkgs, stringsAsFactors = FALSE)
@@ -214,7 +214,12 @@ UpdateManifest <- function() {
         simplify = FALSE,
         USE.NAMES = TRUE
       )
-      desc <- c('Dataset' = dataset, 'Version' = pkg[['Version']], desc)
+      desc <- c(
+        'Dataset' = dataset,
+        'Version' = pkg[['Version']],
+        'Summary' = pkg[['Title']],
+        desc
+      )
       return(desc)
     }
   )
