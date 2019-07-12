@@ -49,6 +49,10 @@ pbmc3k.SeuratData   pbmc3k   3.0.0   human   2700             raw          final
 
 Installation of datasets can be done with `InstallData`; this function will accept either a dataset name (eg. `pbmc3k`) or the corresponding package name (eg. `pbmc3k.SeuratData`). `InstallData` will automatically attach the installed dataset package so one can immediately load and use the dataset.
 
+```R
+> InstallData("pbmc3k")
+```
+
 Loading a dataset is done using the [`data`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/data.html) function
 
 ```R
