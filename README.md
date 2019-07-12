@@ -15,7 +15,7 @@ SeuratData serves as a more specific package manager and quasi-metapacakge for R
 Installation of SeuratData can be accomplished through [devtools](https://cran.r-project.org/package=devtools)
 
 ```R
-devtools::install_github('saitjalab/seurat-data')
+devtools::install_github('satijalab/seurat-data')
 ```
 
 ### Getting Started
