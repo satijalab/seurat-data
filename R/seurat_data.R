@@ -26,13 +26,12 @@ AvailableData <- function() {
 #' Install a dataset
 #'
 #' @param ds List of datasets to install
-#' @param force.reinstall Force reinstall already installed packages, otherwise
-#' will ask for confirmation before reinstalling
+#' @param force.reinstall Force reinstall already installed packages
 #' @param ... Extra parameters passed to \code{\link[utils]{install.packages}}
 #'
 #' @return Invisible \code{NULL}
 #'
-#' @importFrom utils menu install.packages
+#' @importFrom utils install.packages
 #'
 #' @export
 #'
@@ -44,37 +43,19 @@ InstallData <- function(ds, force.reinstall = FALSE, ...) {
   if (!force.reinstall) {
     installed <- intersect(x = pkgs, y = rownames(x = InstalledData()))
     if (length(x = installed) > 0) {
-      if (interactive()) {
-        reinstall <- vector(mode = 'integer', length = length(x = installed))
-        names(x = reinstall) <- gsub(
-          pattern = '\\.SeuratData',
-          replacement = '',
-          x = installed
-        )
-        for (n in names(x = reinstall)) {
-          message("Reinstall ", n, "?")
-          reinstall[n] <- menu(choices = c('yes', 'no'))
-        }
-        if (any(reinstall == 0)) {
-          return(invisible(x = NULL))
-        }
-        installed <- installed[as.logical(x = reinstall - 1)]
-        if (length(x = installed) > 0) {
-          warning(
-            "The following packages are already installed and will not be reinstalled: ",
-            paste(
-              names(x = reinstall)[as.logical(x = reinstall - 1)],
-              collapse = ', '
-            ),
-            call. = FALSE,
-            immediate. = TRUE
-          )
-        }
-        pkgs <- setdiff(x = pkgs, y = installed)
-        if (!as.logical(x = length(x = pkgs))) {
-          UpdateManifest()
-          return(invisible(x = NULL))
-        }
+      warning(
+        "The following packages are already installed and will not be reinstalled: ",
+        paste(
+          gsub(pattern = '\\.SeuratData', replacement = '', x = installed),
+          collapse = ', '
+        ),
+        call. = FALSE,
+        immediate. = TRUE
+      )
+      pkgs <- setdiff(x = pkgs, y = installed)
+      if (!as.logical(x = length(x = pkgs))) {
+        UpdateManifest()
+        return(invisible(x = NULL))
       }
     }
   }

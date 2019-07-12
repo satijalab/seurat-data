@@ -9,8 +9,7 @@ InstallData(ds, force.reinstall = FALSE, ...)
 \arguments{
 \item{ds}{List of datasets to install}
 
-\item{force.reinstall}{Force reinstall already installed packages, otherwise
-will ask for confirmation before reinstalling}
+\item{force.reinstall}{Force reinstall already installed packages}
 
 \item{...}{Extra parameters passed to \code{\link[utils]{install.packages}}}
 }
