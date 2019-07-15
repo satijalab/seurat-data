@@ -79,7 +79,7 @@ AttachData <- function(pkgname = 'SeuratData') {
     }
   )
   header <- rule(
-    left = bold('Attaching datasets'),
+    left = bold('Installed datasets'),
     right = paste0(pkgname, ' v', packageVersion(pkg = pkgname))
   )
   symbols <- if (is.na(x = seurat.version)) {
