@@ -4,11 +4,11 @@ SeuratData is a mechanism for distributing datasets in the form of [Seurat](http
 
 ### Rationale and Implementation
 
-Dataset distribution is something that should be done in a standard and, hopefully, painless manner. The goal for SeuratData is to distribute datasets for [Seurat](https://satijalab.org/seurat/get_started.html) [vignettes](https://satijalab.org/seurat/frv.html) in a manner that doesn't depend downloading files from various locations across the internet, reading them into R, and keeping track of them on the filesystem for the life of the vignettes. We also wanted to selectively distribute datasets, so not all datasets are downloaded and brought into memory at once, in a manner that was easy to update and as R-native as possible.
+We created SeuratData in order to distribute datasets for [Seurat vignettes](https://satijalab.org/seurat/vignettes.html) in as painless and reproducible a way as possible. We also wanted to give users the flexibility to selectively install and load datasets of interest, to minimize disk storage and memory use.
 
-To accomplish this, we opted to distribute datasets through individual R packages. Under the hood, SeuratData uses standard R functions, such as [`install.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/install.packages.html) for dataset installation, [`available.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/available.packages.html) for dataset listing, and [`data`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/data.html) for dataset loading. However, these functions are fairly generalized and provide little useful metadata for datasets.
+To accomplish this, we opted to distribute datasets through individual R packages. Under the hood, SeuratData uses and extends standard R functions, such as [`install.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/install.packages.html) for dataset installation, [`available.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/available.packages.html) for dataset listing, and [`data`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/data.html) for dataset loading.
 
-SeuratData serves as a more specific package manager and quasi-metapacakge for R, designed around making datasets easy to install and get information for. We provide wrappers around R's package management functions with sensible defaults for dataset packages, and [extend them to provide relavent metadata](https://github.com/satijalab/seurat-data/#getting-started) about said dataset packages. These defaults include setting the package repository (dataset packages are generally not hosted on current R package repositories, and submitting them there would involve long waits before new data is available; to see the URL for the dataset repository, use `getOption("SeuratData.repo.use")`) and building the datasets from source (datasets have no compiled code, and therefore don't need binary installations). Finally, SeuratData will automatically attach dataset packages upon loading, allowing users to load the datasets into memory without needing to load the dataset packages individually.
+SeuratData therefore serves as a more specific package manager (similar to a metapackage) for R. We provide wrappers around R's package management functions, [extend them to provide relavent metadata](https://github.com/satijalab/seurat-data/#getting-started) about each dataset, and set default settings (for example, the repository where data is stored) to facilitate easy installation.
 
 ### Installation
 
@@ -24,7 +24,7 @@ When loading SeuratData, any and all datasets installed through SeuratData will 
 
 ```R
 > library(SeuratData)
-── Attaching datasets ──────────────────────────────────────────────────────────── SeuratData v0.1.0 ──
+── Installed datasets ───────────────────────────────────────────────────────────── SeuratData v0.1.0 ──
 ✔ cbmc   3.0.0                                           ✔ panc8  3.0.0
 ✔ immune 3.0.0                                           ✔ pbmc3k 3.0.0
 
