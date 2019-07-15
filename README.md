@@ -1,14 +1,6 @@
 # SeuratData
 
-SeuratData is a mechanism for distributing datasets in the form of [Seurat](https://satijalab.org/seurat) objects using R's internal package and data management systems.
-
-### Rationale and Implementation
-
-We created SeuratData in order to distribute datasets for [Seurat vignettes](https://satijalab.org/seurat/vignettes.html) in as painless and reproducible a way as possible. We also wanted to give users the flexibility to selectively install and load datasets of interest, to minimize disk storage and memory use.
-
-To accomplish this, we opted to distribute datasets through individual R packages. Under the hood, SeuratData uses and extends standard R functions, such as [`install.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/install.packages.html) for dataset installation, [`available.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/available.packages.html) for dataset listing, and [`data`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/data.html) for dataset loading.
-
-SeuratData therefore serves as a more specific package manager (similar to a metapackage) for R. We provide wrappers around R's package management functions, [extend them to provide relavent metadata](https://github.com/satijalab/seurat-data/#getting-started) about each dataset, and set default settings (for example, the repository where data is stored) to facilitate easy installation.
+SeuratData is a mechanism for distributing datasets in the form of [Seurat](https://satijalab.org/seurat) objects using R's internal package and data management systems. It represents an easy way for users to get access to datasets that are used in the Seurat vignettes.
 
 ### Installation
 
@@ -20,31 +12,29 @@ devtools::install_github('satijalab/seurat-data')
 
 ### Getting Started
 
-When loading SeuratData, any and all datasets installed through SeuratData will automatically be attached as well. Similar to other metapackages like [tidyverse](https://cran.r-project.org/package=tidyverse), a list of attached datasets will be displayed. Dataset versions correspond to the version of [Seurat](https://satijalab.org/seurat/) they were built under. This message can be suppressed with [`suppressPackageStartupMessages`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/message.html)
+When loading SeuratData, a list of all available datasets will be displayed (this is similar to other metapackages like [tidyverse](https://cran.r-project.org/package=tidyverse)m along with the version of [Seurat](https://satijalab.org/seurat/) used to create each dataset. This message can be suppressed with [`suppressPackageStartupMessages`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/message.html)
 
 ```R
 > library(SeuratData)
 ── Installed datasets ───────────────────────────────────────────────────────────── SeuratData v0.1.0 ──
 ✔ cbmc   3.0.0                                           ✔ panc8  3.0.0
-✔ immune 3.0.0                                           ✔ pbmc3k 3.0.0
+✔ ifnb   3.0.0                                           ✔ pbmc3k 3.0.0
 
 ───────────────────────────────────────────────── Key ──────────────────────────────────────────────────
 ✔ Dataset loaded succesfully
-❯ Dataset built with a newer version of Seurat than installed
-❓ Unknown version of Seurat installed
-
 ```
 
-To see a manifest of available datasets, use `AvailableData`; this manifest will update as new datasets are uploaded to our data repository.
+To see a manifest of all available datasets, use `AvailableData`; this manifest will update as new datasets are uploaded to our data repository.
 
 ```R
 > AvailableData()
-                   Dataset Version species ncells default.dataset other.datasets Installed InstalledVersion
-bm40k.SeuratData     bm40k   3.0.0   human  40000             raw           <NA>     FALSE             <NA>
-cbmc.SeuratData       cbmc   3.0.0   human   8617            <NA>           <NA>      TRUE            3.0.0
-immune.SeuratData   immune   3.0.0   human  13096            <NA>           <NA>      TRUE            3.0.0
-panc8.SeuratData     panc8   3.0.0   human  14892             raw           <NA>      TRUE            3.0.0
-pbmc3k.SeuratData   pbmc3k   3.0.0   human   2700             raw          final      TRUE            3.0.0
+                     Dataset Version                                                        Summary species            system ncells                                                            tech default.dataset other.datasets         notes Installed InstalledVersion
+cbmc.SeuratData         cbmc   3.0.0                   scRNAseq and 13-antibody sequencing of CBMCs   human CBMC (cord blood)   8617                                                        CITE-seq             raw           <NA>          <NA>      TRUE            3.0.0
+hcabm40k.SeuratData hcabm40k   3.0.0 40,000 Cells From the Human Cell Atlas ICA Bone Marrow Dataset   human       bone marrow  40000                                                          10x v2             raw           <NA>          <NA>     FALSE            3.0.0
+ifnb.SeuratData         ifnb   3.0.0                              IFNB-Stimulated and Control PBMCs   human              PBMC  13999                                                          10x v1             raw           <NA>          <NA>      TRUE            3.0.0
+panc8.SeuratData       panc8   3.0.0               Eight Pancreas Datasets Across Five Technologies   human Pancreatic Islets  14892                SMARTSeq2, Fluidigm C1, CelSeq, CelSeq2, inDrops             raw           <NA>          <NA>      TRUE            3.0.0
+pbmc3k.SeuratData     pbmc3k   3.0.0                                     3k PBMCs from 10X Genomics   human              PBMC   2700                                                          10x v1             raw          final          <NA>      TRUE            3.0.0
+pbmcsca.SeuratData   pbmcsca   3.0.0           Broad Institute PBMC Systematic Comparative Analysis   human              PBMC  31021 10x v2, 10x v3, SMARTSeq2, Seq-Well, inDrops, Drop-seq, CelSeq2             raw           <NA> HCA benchmark     FALSE            3.0.0
 ```
 
 Installation of datasets can be done with `InstallData`; this function will accept either a dataset name (eg. `pbmc3k`) or the corresponding package name (eg. `pbmc3k.SeuratData`). `InstallData` will automatically attach the installed dataset package so one can immediately load and use the dataset.
@@ -58,20 +48,9 @@ Loading a dataset is done using the [`data`](https://stat.ethz.ch/R-manual/R-dev
 ```R
 > data("pbmc3k")
 > pbmc3k
-An object of class Seurat 
-13714 features across 2700 samples within 1 assay 
+An object of class Seurat
+13714 features across 2700 samples within 1 assay
 Active assay: RNA (13714 features)
-```
-
-Using just the dataset name refers to the "default dataset"; this is generally a raw version of the dataset with no processing of the data. Certain packages have multiple forms of the dataset, such as a processed or "final" version. Loading these alternate versions is done by appending the modifier to the dataset name with a period
-
-```R
-> data("pbmc3k.final")
-> pbmc3k.final
-An object of class Seurat 
-13714 features across 2638 samples within 1 assay 
-Active assay: RNA (13714 features)
- 2 dimensional reductions calculated: pca, umap
 ```
 
 ### Dataset documentation and information
@@ -80,7 +59,7 @@ All datasets provided have help pages built for them. These pages are accessed u
 
 ```R
 > ?pbmc3k
-> ?pbmc3k.final
+> ?ifnb
 ```
 
 A full command list for the steps taken to generate each dataset is present in the examples section of these help pages.
@@ -106,3 +85,11 @@ A BibTeX entry for LaTeX users is
     url = {https://www.nature.com/articles/nmeth.4380},
   }
 ```
+
+### Rationale and Implementation
+
+We created SeuratData in order to distribute datasets for [Seurat](https://satijalab.org/seurat/get_started.html) [vignettes](https://satijalab.org/seurat/frv.html) in as painless and reproducible a way as possible. We also wanted to give users the flexibility to selectively install and load datasets of interest, to minimize disk storage and memory use.
+
+To accomplish this, we opted to distribute datasets through individual R packages. Under the hood, SeuratData uses and extends standard R functions, such as [`install.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/install.packages.html) for dataset installation, [`available.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/available.packages.html) for dataset listing, and [`data`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/data.html) for dataset loading. 
+
+SeuratData therefore serves as a more specific package manager (similar to a metapackage) for R. We provide wrappers around R's package management functions, [extend them to provide relavent metadata](https://github.com/satijalab/seurat-data/#getting-started) about each dataset, and set default settings (for example, the repository where data is stored) to facilitate easy installation.
