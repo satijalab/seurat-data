@@ -1,6 +1,6 @@
 # SeuratData
 
-SeuratData is a mechanism for distributing datasets in the form of [Seurat](https://satijalab.org/seurat) objects using R's internal package and data management systems.
+SeuratData is a mechanism for distributing datasets in the form of [Seurat](https://satijalab.org/seurat) objects using R's internal package and data management systems. It represents an easy way for users to get access to datasets that are used in the Seurat vignettes.
 
 ### Installation
 
