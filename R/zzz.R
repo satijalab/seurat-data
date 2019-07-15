@@ -21,7 +21,7 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 default.options <- list(
-  SeuratData.repo.use = 'http://satijalab04.nygenome.org/'
+  SeuratData.repo.use = 'https://seurat.nygenome.org'
 )
 
 pkg.env <- new.env()
