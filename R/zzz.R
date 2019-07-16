@@ -39,6 +39,8 @@ pkg.env$attached <- vector(mode = 'character')
 #'
 #' @return rhs if lhs is null, else lhs
 #'
+#' @name set-if-null
+#'
 #' @author Hadley Wickham
 #' @references \url{https://adv-r.hadley.nz/functions.html#missing-arguments}
 #'

@@ -37,6 +37,7 @@ Useful links:
 Authors:
 \itemize{
   \item Rahul Satija \email{rsatija@nygenome.org} (0000-0001-9448-8833)
+  \item Andrew Butler \email{abutler@nygenome.org} (0000-0003-3608-0463)
 }
 
 }
