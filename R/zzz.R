@@ -115,7 +115,7 @@ AttachData <- function(pkgname = 'SeuratData') {
     paste(
       c(green(symbol$tick), yellow(symbol$pointer), red(symbol$fancy_question_mark)),
       c(
-        'Dataset loaded succesfully',
+        'Dataset loaded successfully',
         'Dataset built with a newer version of Seurat than installed',
         'Unknown version of Seurat installed'
       ),
