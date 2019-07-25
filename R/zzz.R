@@ -82,6 +82,7 @@ AppData <- function(pkgname = 'SeuratData', author = pkgname) {
 #'
 #' @return Invisible \code{NULL}
 #'
+#' @importFrom stats na.omit
 #' @importFrom cli rule symbol
 #' @importFrom utils packageVersion
 #' @importFrom crayon bold red green yellow blue col_align col_nchar
@@ -91,6 +92,7 @@ AppData <- function(pkgname = 'SeuratData', author = pkgname) {
 AttachData <- function(pkgname = 'SeuratData') {
   installed <- InstalledData()
   installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
+  installed <- installed[grep(pattern = 'NA', x = rownames(x = installed), invert = TRUE), ]
   if (nrow(x = installed) < 1) {
     return(invisible(x = NULL))
   }
@@ -101,7 +103,7 @@ AttachData <- function(pkgname = 'SeuratData') {
     }
   )
   header <- rule(
-    left = bold('Attaching datasets'),
+    left = bold('Installed datasets'),
     right = paste0(pkgname, ' v', packageVersion(pkg = pkgname))
   )
   symbols <- if (is.na(x = seurat.version)) {
@@ -196,7 +198,7 @@ UpdateManifest <- function() {
     expr = available.packages(
       repos = getOption(x = "SeuratData.repo.use"),
       type = 'source',
-      fields = 'Description',
+      fields = c('Description', 'Title'),
       ignore_repo_cache = TRUE
     ),
     warning = function(...) {
@@ -250,7 +252,12 @@ UpdateManifest <- function() {
         simplify = FALSE,
         USE.NAMES = TRUE
       )
-      desc <- c('Dataset' = dataset, 'Version' = pkg[['Version']], desc)
+      desc <- c(
+        'Dataset' = dataset,
+        'Version' = pkg[['Version']],
+        'Summary' = pkg[['Title']],
+        desc
+      )
       return(desc)
     }
   )
@@ -288,6 +295,9 @@ UpdateManifest <- function() {
     x = avail.pkgs$InstalledVersion,
     strict = FALSE
   )
+  # TODO: remove these when we allow loading of processed datasets
+  ds.index <- which(x = colnames(x = avail.pkgs) %in% c('default.dataset', 'other.datasets'))
+  avail.pkgs <- avail.pkgs[, -ds.index]
   pkg.env$manifest <- avail.pkgs
   invisible(x = NULL)
 }
