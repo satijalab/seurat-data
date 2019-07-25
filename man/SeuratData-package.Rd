@@ -19,6 +19,11 @@ SeuratData uses the following [options()] to configure behaviour:
 \itemize{
   \item `SeuratData.repo.use`: Set the location where the SeuratData datasets
   are stored. Users generally should not modify.
+  \item `SeuratData.manifest.cache`: Cache the data manifest whenever we talk
+  to the data repository
+  \item `SeuratData.roaming`: For Windows users, use a roaming profile directory
+  for domain users. See \url{https://en.wikipedia.org/wiki/Roaming_user_profile}
+  for a brief overview and Microsoft's documentation for greater detail
 }
 }
 

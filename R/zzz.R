@@ -7,6 +7,11 @@
 #' \itemize{
 #'   \item `SeuratData.repo.use`: Set the location where the SeuratData datasets
 #'   are stored. Users generally should not modify.
+#'   \item `SeuratData.manifest.cache`: Cache the data manifest whenever we talk
+#'   to the data repository
+#'   \item `SeuratData.roaming`: For Windows users, use a roaming profile directory
+#'   for domain users. See \url{https://en.wikipedia.org/wiki/Roaming_user_profile}
+#'   for a brief overview and Microsoft's documentation for greater detail
 #' }
 #'
 #' @docType package
@@ -22,6 +27,7 @@
 
 default.options <- list(
   SeuratData.repo.use = 'http://satijalab04.nygenome.org/',
+  SeuratData.manifest.cache = TRUE,
   SeuratData.roaming = FALSE
 )
 
@@ -29,6 +35,7 @@ pkg.env <- new.env()
 pkg.env$manifest <- vector(mode = 'list')
 pkg.env$source <- vector(mode = 'character')
 pkg.env$attached <- vector(mode = 'character')
+pkg.env$extdata.warn <- FALSE
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Internal functions
@@ -194,6 +201,7 @@ NameToPackage <- function(ds) {
 #'
 UpdateManifest <- function() {
   pkg.env$source <- 'remote'
+  cache.manifest <- file.path(AppData(pkgname = 'SeuratData', author = 'Satija Lab'), 'manifest.Rds')
   avail.pkgs <- tryCatch(
     expr = available.packages(
       repos = getOption(x = "SeuratData.repo.use"),
@@ -203,76 +211,99 @@ UpdateManifest <- function() {
     ),
     warning = function(...) {
       pkg.env$source <- ifelse(
-        test = file.exists(file.path(
-          AppData(pkgname = 'SeuratData', author = 'Satija Lab'),
-          'manifest.Rds'
-        )),
+        test = file.exists(cache.manifest),
         yes = 'appdir',
-        no = 'appdata'
+        no = 'extdata'
       )
-      # TODO: this
+      if (pkg.env$source == 'appdir') {
+        readRDS(file = cache.manifest)
+      } else if (pkg.env$source == 'extdata') {
+        message("Using SeuratData-bundled data manifest")
+        readRDS(file = system.file(
+          'extdata/manifest.Rds',
+          package = 'SeuratData',
+          mustWork = TRUE
+        ))
+      }
     }
   )
-  avail.pkgs <- as.data.frame(x = avail.pkgs, stringsAsFactors = FALSE)
-  avail.pkgs <- avail.pkgs[grepl(pattern = '\\.SeuratData$', x = avail.pkgs$Package), , drop = FALSE]
-  avail.pkgs <- apply(
-    X = avail.pkgs,
-    MARGIN = 1,
-    FUN = function(pkg) {
-      dataset <- gsub(
-        pattern = '\\.SeuratData$',
-        replacement = '',
-        x = pkg[['Package']]
-      )
-      desc <- unlist(x = strsplit(x = pkg[['Description']], split = '\n'))
-      desc <- sapply(
-        X = strsplit(x = desc, split = ':'),
-        FUN = function(x) {
-          name <- trimws(x = x[[1]])
-          val <- trimws(x = unlist(x = strsplit(x = x[[2]], split = ',')))
-          val <- paste(val, collapse = ', ')
-          names(x = val) <- name
-          return(val)
-        }
-      )
-      desc <- sapply(
-        X = desc,
-        FUN = function(x) {
-          x <- tryCatch(
-            expr = as.numeric(x = x),
-            warning = function(...) {
-              return(x)
-            }
-          )
-          if (!is.numeric(x = x) && !is.na(x = as.logical(x = x))) {
-            x <- as.logical(x = x)
+  if (pkg.env$source == 'remote') {
+    pkg.env$extdata.warn <- FALSE
+    avail.pkgs <- as.data.frame(x = avail.pkgs, stringsAsFactors = FALSE)
+    avail.pkgs <- avail.pkgs[grepl(pattern = '\\.SeuratData$', x = avail.pkgs$Package), , drop = FALSE]
+    avail.pkgs <- apply(
+      X = avail.pkgs,
+      MARGIN = 1,
+      FUN = function(pkg) {
+        dataset <- gsub(
+          pattern = '\\.SeuratData$',
+          replacement = '',
+          x = pkg[['Package']]
+        )
+        desc <- unlist(x = strsplit(x = pkg[['Description']], split = '\n'))
+        desc <- sapply(
+          X = strsplit(x = desc, split = ':'),
+          FUN = function(x) {
+            name <- trimws(x = x[[1]])
+            val <- trimws(x = unlist(x = strsplit(x = x[[2]], split = ',')))
+            val <- paste(val, collapse = ', ')
+            names(x = val) <- name
+            return(val)
           }
-          return(x)
-        },
-        simplify = FALSE,
-        USE.NAMES = TRUE
-      )
-      desc <- c(
-        'Dataset' = dataset,
-        'Version' = pkg[['Version']],
-        'Summary' = pkg[['Title']],
-        desc
-      )
-      return(desc)
+        )
+        desc <- sapply(
+          X = desc,
+          FUN = function(x) {
+            x <- tryCatch(
+              expr = as.numeric(x = x),
+              warning = function(...) {
+                return(x)
+              }
+            )
+            if (!is.numeric(x = x) && !is.na(x = as.logical(x = x))) {
+              x <- as.logical(x = x)
+            }
+            return(x)
+          },
+          simplify = FALSE,
+          USE.NAMES = TRUE
+        )
+        desc <- c(
+          'Dataset' = dataset,
+          'Version' = pkg[['Version']],
+          'Summary' = pkg[['Title']],
+          desc
+        )
+        return(desc)
+      }
+    )
+    manifest.names <- unique(x = unlist(
+      x = lapply(X = avail.pkgs, FUN = names),
+      use.names = FALSE
+    ))
+    for (pkg in names(x = avail.pkgs)) {
+      for (col in manifest.names) {
+        avail.pkgs[[pkg]][[col]] <- avail.pkgs[[pkg]][[col]] %||% NA
+      }
     }
-  )
-  manifest.names <- unique(x = unlist(
-    x = lapply(X = avail.pkgs, FUN = names),
-    use.names = FALSE
-  ))
-  for (pkg in names(x = avail.pkgs)) {
-    for (col in manifest.names) {
-      avail.pkgs[[pkg]][[col]] <- avail.pkgs[[pkg]][[col]] %||% NA
+    avail.pkgs <- lapply(X = avail.pkgs, FUN = as.data.frame, stringsAsFactors = FALSE)
+    avail.pkgs <- do.call(what = 'rbind', args = avail.pkgs)
+    avail.pkgs$Version <- package_version(x = avail.pkgs$Version)
+  } else if (pkg.env$source == 'appdir') {
+    pkg.env$extdata.warn <- FALSE
+    message("Using cached data manifest, last updated at ", file.info(cache.manifest)$ctime)
+  } else if (pkg.env$source == 'extdata') {
+    if (!pkg.env$extdata.warn) {
+      warning(
+        "Using SeuratData-bundled data manifest.",
+        "This may be out-of-date and not contain the latest datasets",
+        "This warning will be shown once per session or until we can read from a remote or cached data manifest",
+        call. = FALSE,
+        immediate. = TRUE
+      )
     }
+    pkg.env$extdata.warn <- TRUE
   }
-  avail.pkgs <- lapply(X = avail.pkgs, FUN = as.data.frame, stringsAsFactors = FALSE)
-  avail.pkgs <- do.call(what = 'rbind', args = avail.pkgs)
-  avail.pkgs$Version <- package_version(x = avail.pkgs$Version)
   avail.pkgs$Installed <- vapply(
     X = rownames(x = avail.pkgs),
     FUN = requireNamespace,
@@ -299,6 +330,17 @@ UpdateManifest <- function() {
   ds.index <- which(x = colnames(x = avail.pkgs) %in% c('default.dataset', 'other.datasets'))
   avail.pkgs <- avail.pkgs[, -ds.index]
   pkg.env$manifest <- avail.pkgs
+  if (getOption(x = 'SeuratData.manifest.cache', default = FALSE)) {
+    if (!dir.exists(paths = dirname(path = cache.manifest))) {
+      dir.create(path = dirname(path = cache.manifest), recursive = TRUE)
+    }
+    if (file.exists(cache.manifest)) {
+      cached <- readRDS(file = cache.manifest)
+    }
+    if (!isTRUE(x = all.equal(target = pkg.env$manifest, current = cached))) {
+      saveRDS(object = pkg.env$manifest, file = cache.manifest)
+    }
+  }
   invisible(x = NULL)
 }
 
