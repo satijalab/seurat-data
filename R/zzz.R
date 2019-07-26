@@ -2,13 +2,16 @@
 #'
 #' @section Package options:
 #'
-#' SeuratData uses the following [options()] to configure behaviour:
+#' SeuratData uses the following options to control behaviour, users can configure
+#' these with \code{\link[base]{options}}:
 #'
 #' \itemize{
 #'   \item `SeuratData.repo.use`: Set the location where the SeuratData datasets
 #'   are stored. Users generally should not modify.
 #'   \item `SeuratData.manifest.cache`: Cache the data manifest whenever we talk
-#'   to the data repository
+#'   to the data repository; note, setting to \code{FALSE} will simply prevent
+#'   SeuratData from caching the manifest, not from reading a previously cached
+#'   manifest
 #'   \item `SeuratData.roaming`: For Windows users, use a roaming profile directory
 #'   for domain users. See \url{https://en.wikipedia.org/wiki/Roaming_user_profile}
 #'   for a brief overview and Microsoft's documentation for greater detail
@@ -22,14 +25,16 @@
 "_PACKAGE"
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Global variables and environment
+# Global variables, default options, and package environment
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 default.options <- list(
-  SeuratData.repo.use = 'http://satijalab04.nygenome.org/',
+  SeuratData.repo.use = 'http://seurat.nygenome.org/',
   SeuratData.manifest.cache = TRUE,
   SeuratData.roaming = FALSE
 )
+
+pkg.key <- '\\.SeuratData$'
 
 pkg.env <- new.env()
 pkg.env$manifest <- vector(mode = 'list')
@@ -200,8 +205,13 @@ NameToPackage <- function(ds) {
 #' @keywords internal
 #'
 UpdateManifest <- function() {
+  # Set some defaults
   pkg.env$source <- 'remote'
-  cache.manifest <- file.path(AppData(pkgname = 'SeuratData', author = 'Satija Lab'), 'manifest.Rds')
+  cache.manifest <- file.path(
+    AppData(pkgname = 'SeuratData', author = 'Satija Lab'),
+    'manifest.Rds'
+  )
+  # Attempt to get the manifest from the remote server
   avail.pkgs <- tryCatch(
     expr = available.packages(
       repos = getOption(x = "SeuratData.repo.use"),
@@ -215,31 +225,29 @@ UpdateManifest <- function() {
         yes = 'appdir',
         no = 'extdata'
       )
-      if (pkg.env$source == 'appdir') {
-        readRDS(file = cache.manifest)
-      } else if (pkg.env$source == 'extdata') {
-        message("Using SeuratData-bundled data manifest")
-        readRDS(file = system.file(
-          'extdata/manifest.Rds',
-          package = 'SeuratData',
-          mustWork = TRUE
-        ))
-      }
     }
   )
+  # Process the manifest
   if (pkg.env$source == 'remote') {
+    # Lots of stuff to get the manifest modified from the available.packages format
+    # into something usable by SeuratData
     pkg.env$extdata.warn <- FALSE
     avail.pkgs <- as.data.frame(x = avail.pkgs, stringsAsFactors = FALSE)
-    avail.pkgs <- avail.pkgs[grepl(pattern = '\\.SeuratData$', x = avail.pkgs$Package), , drop = FALSE]
+    # Ensure we only use datasets tagged with .SeuratData
+    avail.pkgs <- avail.pkgs[grepl(pattern = pkg.key, x = avail.pkgs$Package), , drop = FALSE]
+    # Filter down to dataset name, short summary from package title, and
+    # metadata contained in package description
     avail.pkgs <- apply(
       X = avail.pkgs,
       MARGIN = 1,
       FUN = function(pkg) {
+        # Get dataset name
         dataset <- gsub(
-          pattern = '\\.SeuratData$',
+          pattern = pkg.key,
           replacement = '',
           x = pkg[['Package']]
         )
+        # Process the description metadata
         desc <- unlist(x = strsplit(x = pkg[['Description']], split = '\n'))
         desc <- sapply(
           X = strsplit(x = desc, split = ':'),
@@ -268,6 +276,7 @@ UpdateManifest <- function() {
           simplify = FALSE,
           USE.NAMES = TRUE
         )
+        # Assemble the information
         desc <- c(
           'Dataset' = dataset,
           'Version' = pkg[['Version']],
@@ -277,6 +286,7 @@ UpdateManifest <- function() {
         return(desc)
       }
     )
+    # Pad missing metadata with NAs
     manifest.names <- unique(x = unlist(
       x = lapply(X = avail.pkgs, FUN = names),
       use.names = FALSE
@@ -286,29 +296,43 @@ UpdateManifest <- function() {
         avail.pkgs[[pkg]][[col]] <- avail.pkgs[[pkg]][[col]] %||% NA
       }
     }
+    # Convert each entry to a dataframe and bind everything together
     avail.pkgs <- lapply(X = avail.pkgs, FUN = as.data.frame, stringsAsFactors = FALSE)
     avail.pkgs <- do.call(what = 'rbind', args = avail.pkgs)
+    # Coerce version information to package_version
     avail.pkgs$Version <- package_version(x = avail.pkgs$Version)
   } else if (pkg.env$source == 'appdir') {
+    # Read cached manifest
     pkg.env$extdata.warn <- FALSE
-    message("Using cached data manifest, last updated at ", file.info(cache.manifest)$ctime)
+    packageStartupMessage(
+      "Using cached data manifest, last updated at ",
+      file.info(cache.manifest)$ctime
+    )
+    avail.pkgs <- readRDS(file = cache.manifest)
   } else if (pkg.env$source == 'extdata') {
+    # Read SeuratData-bundled manifest
     if (!pkg.env$extdata.warn) {
       warning(
-        "Using SeuratData-bundled data manifest.",
-        "This may be out-of-date and not contain the latest datasets",
+        "Using SeuratData-bundled data manifest. ",
+        "This may be out-of-date and not contain the latest datasets. ",
         "This warning will be shown once per session or until we can read from a remote or cached data manifest",
         call. = FALSE,
         immediate. = TRUE
       )
     }
     pkg.env$extdata.warn <- TRUE
+    avail.pkgs <- readRDS(file = system.file(
+      'extdata/manifest.Rds',
+      package = 'SeuratData',
+      mustWork = TRUE
+    ))
   }
+  # Get dataset installation status
   avail.pkgs$Installed <- vapply(
     X = rownames(x = avail.pkgs),
     FUN = requireNamespace,
     FUN.VALUE = logical(length = 1L),
-    quietly = TRUE,
+    quietly = TRUE
   )
   avail.pkgs$InstalledVersion <- sapply(
     X = rownames(x = avail.pkgs),
@@ -322,20 +346,28 @@ UpdateManifest <- function() {
       return(as.character(x = pkg.version))
     }
   )
+  # Coerce version information to package_version
+  # Allow NAs to become effectively NA_pacakge_version_
   avail.pkgs$InstalledVersion <- package_version(
     x = avail.pkgs$InstalledVersion,
     strict = FALSE
   )
   # TODO: remove these when we allow loading of processed datasets
-  ds.index <- which(x = colnames(x = avail.pkgs) %in% c('default.dataset', 'other.datasets'))
-  avail.pkgs <- avail.pkgs[, -ds.index]
+  cols.remove <- c('default.dataset', 'other.datasets')
+  if (any(cols.remove %in% colnames(x = avail.pkgs))) {
+    ds.index <- which(x = colnames(x = avail.pkgs) %in% cols.remove)
+    avail.pkgs <- avail.pkgs[, -ds.index]
+  }
   pkg.env$manifest <- avail.pkgs
+  # Cache the manifest
   if (getOption(x = 'SeuratData.manifest.cache', default = FALSE)) {
     if (!dir.exists(paths = dirname(path = cache.manifest))) {
       dir.create(path = dirname(path = cache.manifest), recursive = TRUE)
     }
-    if (file.exists(cache.manifest)) {
-      cached <- readRDS(file = cache.manifest)
+    cached <- if (file.exists(cache.manifest)) {
+      readRDS(file = cache.manifest)
+    } else {
+      NULL
     }
     if (!isTRUE(x = all.equal(target = pkg.env$manifest, current = cached))) {
       saveRDS(object = pkg.env$manifest, file = cache.manifest)

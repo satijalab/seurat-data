@@ -46,7 +46,7 @@ InstallData <- function(ds, force.reinstall = FALSE, ...) {
       warning(
         "The following packages are already installed and will not be reinstalled: ",
         paste(
-          gsub(pattern = '\\.SeuratData', replacement = '', x = installed),
+          gsub(pattern = pkg.key, replacement = '', x = installed),
           collapse = ', '
         ),
         call. = FALSE,
