@@ -5,7 +5,7 @@
 \title{Save a Seurat object into component Rds files}
 \usage{
 SaveSeuratObject(object, directory = file.path(getwd(), Project(object =
-  object)))
+  object)), verbose = TRUE)
 }
 \arguments{
 \item{...}{...}

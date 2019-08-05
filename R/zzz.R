@@ -1,5 +1,14 @@
 #' Install and manage Seurat datasets
 #'
+#' @section Package options:
+#'
+#' SeuratData uses the following [options()] to configure behaviour:
+#'
+#' \itemize{
+#'   \item `SeuratData.repo.use`: Set the location where the SeuratData datasets
+#'   are stored. Users generally should not modify.
+#' }
+#'
 #' @docType package
 #' @rdname SeuratData-package
 #' @name SeuratData-package
@@ -11,7 +20,10 @@
 # Global variables and environment
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-repo.use <- 'http://satijalab04.nygenome.org'
+default.options <- list(
+  SeuratData.repo.use = 'https://seurat.nygenome.org'
+)
+
 pkg.env <- new.env()
 pkg.env$manifest <- vector(mode = 'character')
 pkg.env$attached <- vector(mode = 'character')
@@ -26,6 +38,8 @@ pkg.env$attached <- vector(mode = 'character')
 #' @param rhs The value to provide if x is null
 #'
 #' @return rhs if lhs is null, else lhs
+#'
+#' @name set-if-null
 #'
 #' @author Hadley Wickham
 #' @references \url{https://adv-r.hadley.nz/functions.html#missing-arguments}
@@ -46,6 +60,7 @@ pkg.env$attached <- vector(mode = 'character')
 #'
 #' @return Invisible \code{NULL}
 #'
+#' @importFrom stats na.omit
 #' @importFrom cli rule symbol
 #' @importFrom utils packageVersion
 #' @importFrom crayon bold red green yellow blue col_align col_nchar
@@ -54,10 +69,11 @@ pkg.env$attached <- vector(mode = 'character')
 #'
 AttachData <- function(pkgname = 'SeuratData') {
   installed <- InstalledData()
+  installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
+  installed <- installed[grep(pattern = 'NA', x = rownames(x = installed), invert = TRUE), ]
   if (nrow(x = installed) < 1) {
     return(invisible(x = NULL))
   }
-  installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
   seurat.version <- tryCatch(
     expr = packageVersion(pkg = 'Seurat'),
     error = function(...) {
@@ -65,7 +81,7 @@ AttachData <- function(pkgname = 'SeuratData') {
     }
   )
   header <- rule(
-    left = bold('Attaching datasets'),
+    left = bold('Installed datasets'),
     right = paste0(pkgname, ' v', packageVersion(pkg = pkgname))
   )
   symbols <- if (is.na(x = seurat.version)) {
@@ -101,7 +117,7 @@ AttachData <- function(pkgname = 'SeuratData') {
     paste(
       c(green(symbol$tick), yellow(symbol$pointer), red(symbol$fancy_question_mark)),
       c(
-        'Dataset loaded succesfully',
+        'Dataset loaded successfully',
         'Dataset built with a newer version of Seurat than installed',
         'Unknown version of Seurat installed'
       ),
@@ -253,9 +269,9 @@ SaveSeuratObject <- function(
 #'
 UpdateManifest <- function() {
   avail.pkgs <- available.packages(
-    repos = repo.use,
+    repos = getOption(x = "SeuratData.repo.use"),
     type = 'source',
-    fields = 'Description',
+    fields = c('Description', 'Title'),
     ignore_repo_cache = TRUE
   )
   avail.pkgs <- as.data.frame(x = avail.pkgs, stringsAsFactors = FALSE)
@@ -297,7 +313,12 @@ UpdateManifest <- function() {
         simplify = FALSE,
         USE.NAMES = TRUE
       )
-      desc <- c('Dataset' = dataset, 'Version' = pkg[['Version']], desc)
+      desc <- c(
+        'Dataset' = dataset,
+        'Version' = pkg[['Version']],
+        'Summary' = pkg[['Title']],
+        desc
+      )
       return(desc)
     }
   )
@@ -335,6 +356,9 @@ UpdateManifest <- function() {
     x = avail.pkgs$InstalledVersion,
     strict = FALSE
   )
+  # TODO: remove these when we allow loading of processed datasets
+  ds.index <- which(x = colnames(x = avail.pkgs) %in% c('default.dataset', 'other.datasets'))
+  avail.pkgs <- avail.pkgs[, -ds.index]
   pkg.env$manifest <- avail.pkgs
   invisible(x = NULL)
 }
@@ -345,4 +369,13 @@ UpdateManifest <- function() {
 
 .onAttach <- function(libname, pkgname) {
   AttachData(pkgname = pkgname)
+}
+
+.onLoad <- function(libname, pkgname) {
+  op <- options()
+  toset <- !(names(x = default.options) %in% names(x = op))
+  if (any(toset)) {
+    options(default.options[toset])
+  }
+  invisible()
 }

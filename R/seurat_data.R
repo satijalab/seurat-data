@@ -26,6 +26,7 @@ AvailableData <- function() {
 #' Install a dataset
 #'
 #' @param ds List of datasets to install
+#' @param force.reinstall Force reinstall already installed packages
 #' @param ... Extra parameters passed to \code{\link[utils]{install.packages}}
 #'
 #' @return Invisible \code{NULL}
@@ -36,10 +37,33 @@ AvailableData <- function() {
 #'
 #' @seealso \code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
 #'
-InstallData <- function(ds, ...) {
+InstallData <- function(ds, force.reinstall = FALSE, ...) {
   UpdateManifest()
   pkgs <- NameToPackage(ds = ds)
-  install.packages(pkgs = pkgs, repos = repo.use, type = 'source', ...)
+  if (!force.reinstall) {
+    installed <- intersect(x = pkgs, y = rownames(x = InstalledData()))
+    if (length(x = installed) > 0) {
+      warning(
+        "The following packages are already installed and will not be reinstalled: ",
+        paste(
+          gsub(pattern = '\\.SeuratData', replacement = '', x = installed),
+          collapse = ', '
+        ),
+        call. = FALSE,
+        immediate. = TRUE
+      )
+      pkgs <- setdiff(x = pkgs, y = installed)
+      if (!as.logical(x = length(x = pkgs))) {
+        UpdateManifest()
+        return(invisible(x = NULL))
+      }
+    }
+  }
+  pkgs2 <- paste0('package:', pkgs)
+  for (p in pkgs2[pkgs2 %in% search()]) {
+    detach(name = p, unload = TRUE, character.only = TRUE)
+  }
+  install.packages(pkgs = pkgs, repos = getOption(x = "SeuratData.repo.use"), type = 'source', ...)
   for (pkg in pkgs) {
     attachNamespace(ns = pkg)
     pkg.env$attached <- c(pkg.env$attached, pkg)
@@ -112,7 +136,12 @@ LoadData <- function(
 RemoveData <- function(ds, lib) {
   UpdateManifest()
   pkgs <- NameToPackage(ds = ds)
+  pkgs2 <- paste0('package:', pkgs)
+  for (p in pkgs2[pkgs2 %in% search()]) {
+    detach(name = p, unload = TRUE, character.only = TRUE)
+  }
   remove.packages(pkgs = pkgs, lib = lib)
+  UpdateManifest()
 }
 
 #' Update datasets
@@ -128,7 +157,7 @@ RemoveData <- function(ds, lib) {
 #' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
 #'
 UpdateData <- function(ask = TRUE, lib.loc = NULL) {
-  update.packages(lib.loc = lib.loc, repos = repo.use, ask = ask, type = 'source')
+  update.packages(lib.loc = lib.loc, repos = getOption(x = "SeuratData.repo.use"), ask = ask, type = 'source')
   UpdateManifest()
   invisible(x = NULL)
 }
