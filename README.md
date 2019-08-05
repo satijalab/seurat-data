@@ -12,7 +12,7 @@ devtools::install_github('satijalab/seurat-data')
 
 ### Getting Started
 
-When loading SeuratData, a list of all available datasets will be displayed (this is similar to other metapackages like [tidyverse](https://cran.r-project.org/package=tidyverse)m along with the version of [Seurat](https://satijalab.org/seurat/) used to create each dataset. This message can be suppressed with [`suppressPackageStartupMessages`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/message.html)
+When loading SeuratData, a list of all available datasets will be displayed (this is similar to other metapackages like [tidyverse](https://cran.r-project.org/package=tidyverse) along with the version of [Seurat](https://satijalab.org/seurat/) used to create each dataset. This message can be suppressed with [`suppressPackageStartupMessages`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/message.html)
 
 ```R
 > library(SeuratData)
@@ -21,7 +21,7 @@ When loading SeuratData, a list of all available datasets will be displayed (thi
 ✔ ifnb   3.0.0                                           ✔ pbmc3k 3.0.0
 
 ───────────────────────────────────────────────── Key ──────────────────────────────────────────────────
-✔ Dataset loaded succesfully
+✔ Dataset loaded successfully
 ```
 
 To see a manifest of all available datasets, use `AvailableData`; this manifest will update as new datasets are uploaded to our data repository.
@@ -92,4 +92,4 @@ We created SeuratData in order to distribute datasets for [Seurat](https://satij
 
 To accomplish this, we opted to distribute datasets through individual R packages. Under the hood, SeuratData uses and extends standard R functions, such as [`install.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/install.packages.html) for dataset installation, [`available.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/available.packages.html) for dataset listing, and [`data`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/data.html) for dataset loading. 
 
-SeuratData therefore serves as a more specific package manager (similar to a metapackage) for R. We provide wrappers around R's package management functions, [extend them to provide relavent metadata](https://github.com/satijalab/seurat-data/#getting-started) about each dataset, and set default settings (for example, the repository where data is stored) to facilitate easy installation.
+SeuratData therefore serves as a more specific package manager (similar to a metapackage) for R. We provide wrappers around R's package management functions, [extend them to provide relevant metadata](https://github.com/satijalab/seurat-data/#getting-started) about each dataset, and set default settings (for example, the repository where data is stored) to facilitate easy installation.
