@@ -117,6 +117,32 @@ AttachData <- function(pkgname = 'SeuratData') {
   invisible(x = NULL)
 }
 
+#' Check to see if a matrix is empty
+#'
+#' Deterime if a matrix is empty or not
+#'
+#' @param x A matrix
+#'
+#' @return \code{TRUE} if the matrix is empty otherwise \code{FALSE}
+#'
+#' @details A matrix is considered empty if it satisfies one of the following
+#' conditions:
+#' \itemize{
+#'   \item The dimensions of the matrix are 0-by-0 (\code{all(dim(x) == 0)})
+#'   \item The dimensions of the matrix are 1-by-1 (\code{all(dim(x) == 1)}) and
+#'   the sole value is a \code{NA}
+#' }
+#' These two situations correspond to matrices generated with either
+#' \code{new('matrix')} or \code{matrix()}
+#'
+#' @keywords internal
+#'
+IsMatrixEmpty <- function(x) {
+  matrix.dims <- dim(x = x)
+  matrix.na <- all(matrix.dims == 1) && all(is.na(x = x))
+  return(all(matrix.dims == 0) || matrix.na)
+}
+
 #' Find dataset packages based on name
 #'
 #' @param ds Names of datasets
@@ -159,10 +185,14 @@ NameToPackage <- function(ds) {
 #'
 SaveSeuratObject <- function(
   object,
-  directory = file.path(getwd(), Project(object = object))
+  directory = file.path(getwd(), Project(object = object)),
+  verbose = TRUE
 ) {
   if (!dir.exists(paths = directory)) {
     dir.create(path = directory, recursive = TRUE)
+  }
+  if (verbose) {
+    message("Saving Seurat object to ", directory)
   }
   names <- slotNames(x = object)
   collections <- names(x = which(x = sapply(
@@ -179,14 +209,19 @@ SaveSeuratObject <- function(
       if (all(s4)) {
         for (i in 1:length(x = obj)) {
           obj.name <- names(x = obj)[i]
-          message("Saving ", obj.name, " from ", col)
+          if (verbose) {
+            message("Saving ", obj.name, " from ", col)
+          }
           SaveSeuratObject(
             object = obj[[i]],
-            directory = file.path(directory, col, obj.name)
+            directory = file.path(directory, col, obj.name),
+            verbose = verbose
           )
         }
       } else {
-        message("Saving ", col)
+        if (verbose) {
+          message("Saving ", col)
+        }
         saveRDS(
           object = obj,
           file = file.path(directory, paste0(col, '.Rds'))
@@ -198,7 +233,9 @@ SaveSeuratObject <- function(
   }
   names <- setdiff(x = names, y = collections)
   for (x in names) {
-    message("Saving ", x)
+    if (verbose) {
+      message("Saving ", x)
+    }
     saveRDS(
       object = slot(object = object, name = x),
       file = file.path(directory, paste0(x, '.Rds'))
