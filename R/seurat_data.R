@@ -12,11 +12,9 @@ NULL
 #'   \item{InstalledVersion}{Version of dataset installed, \code{NA} if not installed}
 #' }
 #'
-#' Other columns are extra metadata, and may change as new datasets are made available
-#'
 #' @export
 #'
-#' @seealso \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+#' @seealso \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
 #'
 AvailableData <- function() {
   UpdateManifest()
@@ -93,7 +91,12 @@ InstalledData <- function() {
   return(dat[which(x = dat$Installed, ), , drop = FALSE])
 }
 
-#' Load a dynamic dataset
+#' Modularly load a dataset
+#'
+#' @inheritParams LoadObject
+#' @param ds Optional name of dataset to load
+#'
+#' @inherit LoadObject return
 #'
 #' @export
 #'
@@ -112,14 +115,21 @@ LoadData <- function(
   }
   ds <- NameToPackage(ds = ds)
   type <- match.arg(arg = type, choices = c('info', 'raw', 'processed'))
-  if (type == 'info') {
-    ''
-  } else if (type == 'raw') {
-    ''
-  } else if (type == 'processed') {
-    ''
+  if (type == 'raw') {
+    e <- environment()
+    data(gsub(pattern = ))
   }
-  return(invisible(x = NULL))
+  return(LoadObject(
+    directory = system.file(
+      file.path('extdata', 'object'),
+      package = ds,
+      mustWork = TRUE
+    ),
+    type = type,
+    assays = assays,
+    dimreducs = dimreducs,
+    graphs = graphs
+  ))
 }
 
 #' Remove a dataset

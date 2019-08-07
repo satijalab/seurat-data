@@ -133,6 +133,84 @@ AttachData <- function(pkgname = 'SeuratData') {
   invisible(x = NULL)
 }
 
+#' Index a saved \code{Seurat} object
+#'
+#' @inheritParams LoadObject
+#'
+#' @return ...
+#'
+#' @importFrom tools file_path_sans_ext
+#'
+#' @seealso \code{\link{SaveObject}} \code{\link{LoadObject}}
+#'
+#' @keywords internal
+#'
+IndexObject <- function(directory) {
+  if (!dir.exists(paths = directory)) {
+    stop("Cannot find directory ", directory, call. = FALSE)
+  }
+  # Get a file listing of the saved object directory
+  files <- list.files(path = directory, full.names = TRUE, recursive = FALSE)
+  files <- grep(pattern = '\\.Rds$', x = files, value = TRUE)
+  if (length(x = files) < 1) {
+    stop("No Rds files found in ", directory, call. = FALSE)
+  }
+  # Check Assays
+  assay.dir <- file.path(directory, 'assays')
+  if (!dir.exists(paths = assay.dir)) {
+    stop("Cannot find assay directory", call. = FALSE)
+  }
+  assays <- list.dirs(path = assay.dir, full.names = FALSE, recursive = FALSE)
+  assays <- sapply(
+    X = assays,
+    FUN = function(x) {
+      return(grep(
+        pattern = '\\.Rds$',
+        x = list.files(
+          path = file.path(assay.dir, x),
+          full.names = TRUE,
+          recursive = FALSE
+        ),
+        value = TRUE
+      ))
+    },
+    simplify = FALSE,
+    USE.NAMES = TRUE
+  )
+  assays <- sapply(
+    X = assays,
+    FUN = function(x) {
+      names(x = x) <- basename(path = file_path_sans_ext(x = x))
+      return(x)
+    },
+    simplify = FALSE,
+    USE.NAMES = TRUE
+  )
+  # Check DimReducs
+  reduc.dir <- file.path(directory, 'reductions')
+  reducs <- list.dirs(path = reduc.dir, full.names = FALSE, recursive = FALSE)
+  reducs <- sapply(
+    X = reducs,
+    FUN = function(x) {
+      return(grep(
+        pattern = '\\.Rds$',
+        x = list.files(
+          path = file.path(reduc.dir, x),
+          full.names = TRUE,
+          recursive = FALSE
+        ),
+        value = TRUE
+      ))
+    },
+    simplify = FALSE,
+    USE.NAMES = TRUE
+  )
+  # Check Graphs
+  # Check Misc
+  # Check Tools
+  return(invisible(x = NULL))
+}
+
 #' Check to see if a matrix is empty
 #'
 #' Deterime if a matrix is empty or not
@@ -157,6 +235,40 @@ IsMatrixEmpty <- function(x) {
   matrix.dims <- dim(x = x)
   matrix.na <- all(matrix.dims == 1) && all(is.na(x = x))
   return(all(matrix.dims == 0) || matrix.na)
+}
+
+#' Load a saved \code{Seurat} object
+#'
+#' @param directory Path to the directory the dataset is stored
+#' @param type How to load the \code{Seurat} object; choose from
+#' \describe{
+#'   \item{info}{Information about the object and what's stored in it}
+#'   \item{raw}{The raw form of the dataset, no other options are evaluated}
+#'   \item{processed}{...}
+#' }
+#' @param assays ...
+#' @param dimreducs ...
+#' @param graphs ...
+#'
+#' @return ...
+#'
+#' @seealso \code{\link{SaveObject}} \code{\link{IndexObject}}
+#'
+#' @keywords internal
+#'
+LoadObject <- function(
+  directory,
+  type = c('info', 'processed'),
+  assays = NULL,
+  dimreducs = NULL,
+  graphs = NULL
+) {
+  type <- match.arg(arg = type, choices = c('info', 'processed'))
+  index <- IndexObject(directory = directory)
+  if (type == 'info') {
+    return(index)
+  }
+  return(invisible(x = NULL))
 }
 
 #' Find dataset packages based on name
@@ -188,29 +300,36 @@ NameToPackage <- function(ds) {
   return(ds)
 }
 
-#' Save a Seurat object into component Rds files
+#' Save a \code{Seurat} object into component Rds files
 #'
-#' @param ... ...
+#' @param object A \code{Seurat} object
+#' @param directory Directory to save the object to
+#' @param verbose Show progress messages
 #'
-#' @return Invisibly return the directory that the Seurat object was stored in
+#' @return Invisibly return the directory that the \code{Seurat} object was stored in
 #'
 #' @importFrom Seurat Project
 #' @importFrom methods slotNames slot
 #'
+#' @seealso \code{\link{IndexObject}} \code{\link{LoadObject}}
+#'
 #' @keywords internal
 #'
-SaveSeuratObject <- function(
+SaveObject <- function(
   object,
   directory = file.path(getwd(), Project(object = object)),
   verbose = TRUE
 ) {
+  # Ensure the output directory exists
   if (!dir.exists(paths = directory)) {
     dir.create(path = directory, recursive = TRUE)
   }
   if (verbose) {
     message("Saving Seurat object to ", directory)
   }
+  # Get the slots of the object
   names <- slotNames(x = object)
+  # Figure out which are lists (eg. assays, graphs, reductions)
   collections <- names(x = which(x = sapply(
     X = names,
     FUN = function(n) {
@@ -218,23 +337,47 @@ SaveSeuratObject <- function(
       return(is.list(x = x) && !is.data.frame(x = x))
     }
   )))
+  # For every collection
   for (col in collections) {
     obj <- slot(object = object, name = col)
-    s4 <- vapply(X = obj, FUN = isS4, FUN.VALUE = logical(length = 1L))
+    # Figure out which slots are S4 objects (eg. Assay, DimReduc, dgCMatrix)
+    s4 <- vapply(
+      X = obj,
+      FUN = function(x) {
+        return(isS4(x) && !inherits(x = x, what = c('Graph', 'JackStrawData', 'SeuratCommand')))
+      },
+      FUN.VALUE = logical(length = 1L)
+    )
     if (length(x = s4) > 0) {
+      # Determine if all values of obj are S4 objects (eg. list of Assay objects)
       if (all(s4)) {
         for (i in 1:length(x = obj)) {
+          # Save each complex object in its own directory
           obj.name <- names(x = obj)[i]
           if (verbose) {
             message("Saving ", obj.name, " from ", col)
           }
-          SaveSeuratObject(
+          SaveObject(
             object = obj[[i]],
             directory = file.path(directory, col, obj.name),
             verbose = verbose
           )
         }
       } else {
+        # Not a collection of S4 objects, just save the list (eg. misc, tools)
+        if (length(x = obj) > 0) {
+          if (verbose) {
+            message("Saving ", col)
+          }
+          saveRDS(
+            object = obj,
+            file = file.path(directory, paste0(col, '.Rds'))
+          )
+        }
+      }
+    } else {
+      # Save collections without S4 objects
+      if (length(x = obj) > 0) {
         if (verbose) {
           message("Saving ", col)
         }
@@ -243,20 +386,23 @@ SaveSeuratObject <- function(
           file = file.path(directory, paste0(col, '.Rds'))
         )
       }
-    } else {
-      ''
     }
   }
+  # Save everything that's not a list
   names <- setdiff(x = names, y = collections)
   for (x in names) {
-    if (verbose) {
-      message("Saving ", x)
+    obj <- slot(object = object, name = x)
+    if (!is.null(x = obj) && !IsMatrixEmpty(x = obj)) {
+      if (verbose) {
+        message("Saving ", x)
+      }
+      saveRDS(
+        object = slot(object = object, name = x),
+        file = file.path(directory, paste0(x, '.Rds'))
+      )
     }
-    saveRDS(
-      object = slot(object = object, name = x),
-      file = file.path(directory, paste0(x, '.Rds'))
-    )
   }
+  return(invisible(x = directory))
 }
 
 #' Update the available package manifest
