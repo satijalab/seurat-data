@@ -103,13 +103,7 @@ AttachData <- function(pkgname = 'SeuratData') {
     col_nchar(x = header) - max(col_nchar(x = pkgs[-col.1])),
     col_nchar(x = header) * (1 / 2)
   ))
-  space <- paste(
-    rep_len(
-      x = ' ',
-      length.out = max(space.start - max(col_nchar(x = pkgs[col.1])), 1)
-    ),
-    collapse = ''
-  )
+  space <- MakeSpace(n = max(space.start - max(col_nchar(x = pkgs[col.1])), 1))
   info <- paste0(pkgs[col.1], space, pkgs[-col.1])
   packageStartupMessage(paste(info, collapse = '\n'), '\n')
   packageStartupMessage(rule(center = 'Key'))
@@ -133,82 +127,34 @@ AttachData <- function(pkgname = 'SeuratData') {
   invisible(x = NULL)
 }
 
-#' Index a saved \code{Seurat} object
+#' Enumerate a list or vector
 #'
-#' @inheritParams LoadObject
+#' @param x A list or a vector
 #'
-#' @return ...
+#' @return A list of length \code{x} with the following named values:
+#' \describe{
+#'   \item{\code{name}}{The name of \code{x} at a given index}
+#'   \item{\code{value}}{The value of \code{x} at the corresponding index}
+#' }
 #'
-#' @importFrom tools file_path_sans_ext
-#'
-#' @seealso \code{\link{SaveObject}} \code{\link{LoadObject}}
+#' @note For any given index \code{i} in \code{x}, all attempts to use the name
+#' of the value of \code{x} at \code{i} will be made. If there is no name
+#' (eg. \code{nchar(x = names(x = x)[i]) == 0}), the index \code{i} will be used
+#' in its stead
 #'
 #' @keywords internal
 #'
-IndexObject <- function(directory) {
-  if (!dir.exists(paths = directory)) {
-    stop("Cannot find directory ", directory, call. = FALSE)
-  }
-  # Get a file listing of the saved object directory
-  files <- list.files(path = directory, full.names = TRUE, recursive = FALSE)
-  files <- grep(pattern = '\\.Rds$', x = files, value = TRUE)
-  if (length(x = files) < 1) {
-    stop("No Rds files found in ", directory, call. = FALSE)
-  }
-  # Check Assays
-  assay.dir <- file.path(directory, 'assays')
-  if (!dir.exists(paths = assay.dir)) {
-    stop("Cannot find assay directory", call. = FALSE)
-  }
-  assays <- list.dirs(path = assay.dir, full.names = FALSE, recursive = FALSE)
-  assays <- sapply(
-    X = assays,
-    FUN = function(x) {
-      return(grep(
-        pattern = '\\.Rds$',
-        x = list.files(
-          path = file.path(assay.dir, x),
-          full.names = TRUE,
-          recursive = FALSE
-        ),
-        value = TRUE
-      ))
-    },
-    simplify = FALSE,
-    USE.NAMES = TRUE
+Enumerate <- function(x) {
+  indices <- seq_along(along.with = x)
+  keys <- names(x = x) %||% as.character(x = indices)
+  keys[nchar(x = keys) == 0] <- indices[nchar(x = keys) == 0]
+  vals <- lapply(
+    X = indices,
+    FUN = function(i) {
+      return(c('name' = keys[i], 'value' = unname(obj = x[i])))
+    }
   )
-  assays <- sapply(
-    X = assays,
-    FUN = function(x) {
-      names(x = x) <- basename(path = file_path_sans_ext(x = x))
-      return(x)
-    },
-    simplify = FALSE,
-    USE.NAMES = TRUE
-  )
-  # Check DimReducs
-  reduc.dir <- file.path(directory, 'reductions')
-  reducs <- list.dirs(path = reduc.dir, full.names = FALSE, recursive = FALSE)
-  reducs <- sapply(
-    X = reducs,
-    FUN = function(x) {
-      return(grep(
-        pattern = '\\.Rds$',
-        x = list.files(
-          path = file.path(reduc.dir, x),
-          full.names = TRUE,
-          recursive = FALSE
-        ),
-        value = TRUE
-      ))
-    },
-    simplify = FALSE,
-    USE.NAMES = TRUE
-  )
-  # Check Graphs
-  # Check Misc
-  # Check Tools
-  return(invisible(x = NULL))
+  return(vals)
 }
 
 #' Check to see if a matrix is empty
@@ -237,38 +183,16 @@ IsMatrixEmpty <- function(x) {
   return(all(matrix.dims == 0) || matrix.na)
 }
 
-#' Load a saved \code{Seurat} object
+#' Make a space
 #'
-#' @param directory Path to the directory the dataset is stored
-#' @param type How to load the \code{Seurat} object; choose from
-#' \describe{
-#'   \item{info}{Information about the object and what's stored in it}
-#'   \item{raw}{The raw form of the dataset, no other options are evaluated}
-#'   \item{processed}{...}
-#' }
-#' @param assays ...
-#' @param dimreducs ...
-#' @param graphs ...
+#' @param n Length space should be
 #'
-#' @return ...
-#'
-#' @seealso \code{\link{SaveObject}} \code{\link{IndexObject}}
+#' @return A space (' ') of length \code{n}
 #'
 #' @keywords internal
 #'
-LoadObject <- function(
-  directory,
-  type = c('info', 'processed'),
-  assays = NULL,
-  dimreducs = NULL,
-  graphs = NULL
-) {
-  type <- match.arg(arg = type, choices = c('info', 'processed'))
-  index <- IndexObject(directory = directory)
-  if (type == 'info') {
-    return(index)
-  }
-  return(invisible(x = NULL))
+MakeSpace <- function(n) {
+  return(paste(rep_len(x = ' ', length.out = n), collapse = ''))
 }
 
 #' Find dataset packages based on name
@@ -298,111 +222,6 @@ NameToPackage <- function(ds) {
     stop("No SeuratData datasets provided", call. = FALSE)
   }
   return(ds)
-}
-
-#' Save a \code{Seurat} object into component Rds files
-#'
-#' @param object A \code{Seurat} object
-#' @param directory Directory to save the object to
-#' @param verbose Show progress messages
-#'
-#' @return Invisibly return the directory that the \code{Seurat} object was stored in
-#'
-#' @importFrom Seurat Project
-#' @importFrom methods slotNames slot
-#'
-#' @seealso \code{\link{IndexObject}} \code{\link{LoadObject}}
-#'
-#' @keywords internal
-#'
-SaveObject <- function(
-  object,
-  directory = file.path(getwd(), Project(object = object)),
-  verbose = TRUE
-) {
-  # Ensure the output directory exists
-  if (!dir.exists(paths = directory)) {
-    dir.create(path = directory, recursive = TRUE)
-  }
-  if (verbose) {
-    message("Saving Seurat object to ", directory)
-  }
-  # Get the slots of the object
-  names <- slotNames(x = object)
-  # Figure out which are lists (eg. assays, graphs, reductions)
-  collections <- names(x = which(x = sapply(
-    X = names,
-    FUN = function(n) {
-      x <- slot(object = object, name = n)
-      return(is.list(x = x) && !is.data.frame(x = x))
-    }
-  )))
-  # For every collection
-  for (col in collections) {
-    obj <- slot(object = object, name = col)
-    # Figure out which slots are S4 objects (eg. Assay, DimReduc, dgCMatrix)
-    s4 <- vapply(
-      X = obj,
-      FUN = function(x) {
-        return(isS4(x) && !inherits(x = x, what = c('Graph', 'JackStrawData', 'SeuratCommand')))
-      },
-      FUN.VALUE = logical(length = 1L)
-    )
-    if (length(x = s4) > 0) {
-      # Determine if all values of obj are S4 objects (eg. list of Assay objects)
-      if (all(s4)) {
-        for (i in 1:length(x = obj)) {
-          # Save each complex object in its own directory
-          obj.name <- names(x = obj)[i]
-          if (verbose) {
-            message("Saving ", obj.name, " from ", col)
-          }
-          SaveObject(
-            object = obj[[i]],
-            directory = file.path(directory, col, obj.name),
-            verbose = verbose
-          )
-        }
-      } else {
-        # Not a collection of S4 objects, just save the list (eg. misc, tools)
-        if (length(x = obj) > 0) {
-          if (verbose) {
-            message("Saving ", col)
-          }
-          saveRDS(
-            object = obj,
-            file = file.path(directory, paste0(col, '.Rds'))
-          )
-        }
-      }
-    } else {
-      # Save collections without S4 objects
-      if (length(x = obj) > 0) {
-        if (verbose) {
-          message("Saving ", col)
-        }
-        saveRDS(
-          object = obj,
-          file = file.path(directory, paste0(col, '.Rds'))
-        )
-      }
-    }
-  }
-  # Save everything that's not a list
-  names <- setdiff(x = names, y = collections)
-  for (x in names) {
-    obj <- slot(object = object, name = x)
-    if (!is.null(x = obj) && !IsMatrixEmpty(x = obj)) {
-      if (verbose) {
-        message("Saving ", x)
-      }
-      saveRDS(
-        object = slot(object = object, name = x),
-        file = file.path(directory, paste0(x, '.Rds'))
-      )
-    }
-  }
-  return(invisible(x = directory))
 }
 
 #' Update the available package manifest

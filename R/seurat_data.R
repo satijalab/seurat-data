@@ -93,10 +93,16 @@ InstalledData <- function() {
 
 #' Modularly load a dataset
 #'
-#' @inheritParams LoadObject
+#' @inheritParams LoadH5Seurat
 #' @param ds Optional name of dataset to load
+#' @param type How to load the \code{Seurat} object; choose from
+#' \describe{
+#'   \item{info}{Information about the object and what's stored in it}
+#'   \item{raw}{The raw form of the dataset, no other options are evaluated}
+#'   \item{processed}{...}
+#' }
 #'
-#' @inherit LoadObject return
+#' @inherit LoadH5Seurat return
 #'
 #' @export
 #'
@@ -106,8 +112,9 @@ LoadData <- function(
   ds,
   type = c('info', 'raw', 'processed'),
   assays = NULL,
-  dimreducs = NULL,
-  graphs = NULL
+  reductions = NULL,
+  graphs = NULL,
+  verbose = TRUE
 ) {
   installed <- InstalledData()
   if (!NameToPackage(ds = ds) %in% rownames(x = installed)) {
@@ -116,19 +123,24 @@ LoadData <- function(
   ds <- NameToPackage(ds = ds)
   type <- match.arg(arg = type, choices = c('info', 'raw', 'processed'))
   if (type == 'raw') {
-    e <- environment()
-    data(gsub(pattern = ))
+    e <- new.env()
+    ds <- gsub(pattern = '\\.SeuratData', replacement = '', x = ds)
+    data(list = ds, envir = e)
+    return(e[[ds]])
   }
-  return(LoadObject(
-    directory = system.file(
-      file.path('extdata', 'object'),
+  .NotYetImplemented()
+  type <- match.arg(arg = type, choices = c('info', 'processed'))
+  return(LoadH5Seurat(
+    file = system.file(
+      file.path('extdata', 'processed.h5Seurat'),
       package = ds,
       mustWork = TRUE
     ),
-    type = type,
+    type = ifelse(test = type == 'processed', yes = 'object', no = type),
     assays = assays,
-    dimreducs = dimreducs,
-    graphs = graphs
+    reductions = reductions,
+    graphs = graphs,
+    verbose = verbose
   ))
 }
 

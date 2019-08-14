@@ -21,9 +21,14 @@ RoxygenNote: 6.1.1
 Imports:
     cli,
     crayon,
-    Seurat (>= 3.0.0),
+    methods,
+    Seurat (>= 3.0.2),
     stats,
+    tools,
     utils
 Collate:
     'zzz.R'
+    'h5seurat.R'
     'seurat_data.R'
+Suggests:
+    hdf5r (>= 1.2.0)
