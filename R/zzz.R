@@ -346,9 +346,9 @@ UpdateManifest <- function() {
     x = avail.pkgs$InstalledVersion,
     strict = FALSE
   )
-  # TODO: remove these when we allow loading of processed datasets
-  ds.index <- which(x = colnames(x = avail.pkgs) %in% c('default.dataset', 'other.datasets'))
-  avail.pkgs <- avail.pkgs[, -ds.index]
+  # # TODO: remove these when we allow loading of processed datasets
+  # ds.index <- which(x = colnames(x = avail.pkgs) %in% c('default.dataset', 'other.datasets'))
+  # avail.pkgs <- avail.pkgs[, -ds.index]
   pkg.env$manifest <- avail.pkgs
   invisible(x = NULL)
 }

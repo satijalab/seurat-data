@@ -13,7 +13,9 @@
 \item{...}{Ignored}
 }
 \value{
-A list with the data contained within \code{x}
+A list with the data contained within \code{x}; if the HDF5 attribute
+\code{s4class} is set and is a class, will return an object of class \code{s4class}
+instead
 }
 \description{
 Read an HDF5 group into a ist

@@ -105,7 +105,9 @@ SaveH5Seurat <- function(object, filename, overwrite = FALSE, verbose = TRUE, ..
 #' @param x An \code{H5Group} object (from hdf5r)
 #' @param ... Ignored
 #'
-#' @return A list with the data contained within \code{x}
+#' @return A list with the data contained within \code{x}; if the HDF5 attribute
+#' \code{s4class} is set and is a class, will return an object of class \code{s4class}
+#' instead
 #'
 #' @aliases as.list
 #'
@@ -127,6 +129,17 @@ as.list.H5Group <- function(x, ...) {
     } else {
       x[[i]][]
     }
+  }
+  if (!is.null(x = hdf5r::h5attributes(x = x)$s4class)) {
+    to.return <- tryCatch(
+      expr = do.call(
+        what = 'new',
+        args = c(Class = hdf5r::h5attr(x = x, which = 's4class'), to.return)
+      ),
+      error = function(...) {
+        return(to.return)
+      }
+    )
   }
   return(to.return)
 }
@@ -256,7 +269,8 @@ LoadH5Seurat.character <- function(
 
 #' @importFrom methods new slot<-
 #' @importFrom Seurat as.sparse CreateAssayObject Key<- GetAssayData SetAssayData
-#' AddMetaData VariableFeatures<- CreateDimReducObject as.Graph Misc<-
+#' AddMetaData VariableFeatures<- CreateDimReducObject as.Graph Idents<-
+#' Project<- Project Misc<-
 #'
 #' @rdname LoadH5Seurat
 #' @method LoadH5Seurat H5File
@@ -274,7 +288,6 @@ LoadH5Seurat.H5File <- function(
   ...
 ) {
   type <- match.arg(arg = tolower(x = type), choices = c('info', 'object'))
-  # object <- new(Class = 'Seurat')
   cells <- file[['cell.names']][]
   index <- IndexH5Seurat(file = file)
   if (type == 'info') {
@@ -344,6 +357,8 @@ LoadH5Seurat.H5File <- function(
   for (i in unique.assays) {
     assays.use <- which(x = names(x = assays.checked) == i)
     slots.use <- unique(x = unlist(x = assays.checked[assays.use], use.names = FALSE))
+    slots.use <- slots.use[match(x = names(x = index$assays[[i]]), table = slots.use)]
+    slots.use <- slots.use[index$assays[[i]]]
     assays[[i]] <- slots.use
   }
   for (i in Enumerate(x = assays)) {
@@ -632,7 +647,19 @@ LoadH5Seurat.H5File <- function(
   }
   # Load meta.data
   meta.data <- file[['meta.data']][]
+  rownames(x = meta.data) <- cells
   object <- AddMetaData(object = object, metadata = meta.data)
+  # Set identity class and Project
+  if (!is.null(x = hdf5r::h5attributes(x = file)$project)) {
+    Project(object = object) <- hdf5r::h5attr(x = file, which = 'project')
+  }
+  if (file$exists(name = 'active.ident')) {
+    idents <- file[['active.ident']][]
+    names(x = idents) <- cells
+    Idents(object = object) <- idents
+  } else {
+    Idents(object = object) <- Project(object = object)
+  }
   # Load misc
   for (x in names(x = file[['misc']])) {
     if (verbose) {
@@ -1085,6 +1112,8 @@ ValidateH5SI <- function(x) {
 #'
 #' @return Invisibly returns \code{NULL}
 #'
+#' @importFrom methods slotNames slot
+#'
 #' @keywords internal
 #'
 WriteH5List <- function(x, name, hgroup) {
@@ -1096,11 +1125,22 @@ WriteH5List <- function(x, name, hgroup) {
     for (i in Enumerate(x = x)) {
       if (is.list(x = i$value) && !is.data.frame(x = i$value)) {
         WriteH5List(x = i$value, name = i$name, hgroup = xgroup)
-      } else {
+      } else if (!is.null(x = i$value)) {
         xgroup[[i$name]] <- i$value
       }
     }
-  } else {
+  } else if (isS4(x)) {
+    xgroup <- hgroup$create_group(name = name)
+    hdf5r::h5attr(x = xgroup, which = 's4class') <- class(x = x)[1]
+    for (i in slotNames(x = x)) {
+      obj <- slot(object = x, name = i)
+      if (is.list(x = obj) && !is.data.frame(x = obj)) {
+        WriteH5List(x = obj, name = i, hgroup = xgroup)
+      } else if (!is.null(x = obj)) {
+        xgroup[[i]] <- obj
+      }
+    }
+  } else if (!is.null(x = x)) {
     hgroup[[name]] <- x
   }
   return(invisible(x = NULL))
