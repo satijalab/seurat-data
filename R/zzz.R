@@ -39,6 +39,7 @@ pkg.key <- '\\.SeuratData$'
 pkg.env <- new.env()
 pkg.env$manifest <- vector(mode = 'list')
 pkg.env$source <- vector(mode = 'character')
+pkg.env$update.call <- vector(mode = 'character')
 pkg.env$attached <- vector(mode = 'character')
 pkg.env$extdata.warn <- FALSE
 

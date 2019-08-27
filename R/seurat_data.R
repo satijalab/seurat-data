@@ -49,6 +49,12 @@ AvailableData <- function() {
 #'
 InstallData <- function(ds, force.reinstall = FALSE, ...) {
   UpdateManifest()
+  if (pkg.env$source != 'remote') {
+    stop(
+      "No access to remote SeuratData repository, unable to install new datasets",
+      call. = FALSE
+    )
+  }
   pkgs <- NameToPackage(ds = ds)
   if (!force.reinstall) {
     installed <- intersect(x = pkgs, y = rownames(x = InstalledData()))
@@ -73,7 +79,12 @@ InstallData <- function(ds, force.reinstall = FALSE, ...) {
   for (p in pkgs2[pkgs2 %in% search()]) {
     detach(name = p, unload = TRUE, character.only = TRUE)
   }
-  install.packages(pkgs = pkgs, repos = getOption(x = "SeuratData.repo.use"), type = 'source', ...)
+  install.packages(
+    pkgs = pkgs,
+    repos = getOption(x = "SeuratData.repo.use"),
+    type = 'source',
+    ...
+  )
   for (pkg in pkgs) {
     attachNamespace(ns = pkg)
     pkg.env$attached <- c(pkg.env$attached, pkg)
@@ -134,6 +145,7 @@ LoadData <- function(
   graphs = NULL,
   verbose = TRUE
 ) {
+  .NotYetImplemented()
   installed <- InstalledData()
   if (!NameToPackage(ds = ds) %in% rownames(x = installed)) {
     stop("Cannot find dataset ", ds, call. = FALSE)
@@ -209,6 +221,13 @@ RemoveData <- function(ds, lib) {
 #' }
 #'
 UpdateData <- function(ask = TRUE, lib.loc = NULL) {
+  UpdateManifest()
+  if (pkg.env$source != 'remote') {
+    stop(
+      "No access to remote SeuratData repository, unable to update datasets",
+      call. = FALSE
+    )
+  }
   update.packages(lib.loc = lib.loc, repos = getOption(x = "SeuratData.repo.use"), ask = ask, type = 'source')
   UpdateManifest()
   invisible(x = NULL)
