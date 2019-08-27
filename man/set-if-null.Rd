@@ -18,6 +18,13 @@ rhs if lhs is null, else lhs
 \description{
 Set a default value if an object is null
 }
+\examples{
+\dontrun{
+4 \%||\% 5
+NULL \%|| 5
+}
+
+}
 \references{
 \url{https://adv-r.hadley.nz/functions.html#missing-arguments}
 }
