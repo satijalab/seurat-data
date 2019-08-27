@@ -14,7 +14,11 @@ NULL
 #'
 #' @export
 #'
-#' @seealso \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+#' @seealso \code{\link{InstallData}} \code{\link{InstalledData}}
+#' \code{\link{RemoveData}} \code{\link{UpdateData}}
+#'
+#' @examples
+#' AvailableData()
 #'
 AvailableData <- function() {
   UpdateManifest()
@@ -33,7 +37,13 @@ AvailableData <- function() {
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstalledData}}
+#' \code{\link{RemoveData}} \code{\link{UpdateData}}
+#'
+#' @examples
+#' \dontrun{
+#' InstallData('pbmc3k')
+#' }
 #'
 InstallData <- function(ds, force.reinstall = FALSE, ...) {
   UpdateManifest()
@@ -84,7 +94,11 @@ InstallData <- function(ds, force.reinstall = FALSE, ...) {
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}}
+#' \code{\link{RemoveData}} \code{\link{UpdateData}}
+#'
+#' @examples
+#' InstalledData()
 #'
 InstalledData <- function() {
   dat <- AvailableData()
@@ -99,14 +113,16 @@ InstalledData <- function() {
 #' \describe{
 #'   \item{info}{Information about the object and what's stored in it}
 #'   \item{raw}{The raw form of the dataset, no other options are evaluated}
-#'   \item{processed}{...}
+#'   \item{processed}{The proccessed data, modular loading avaible by setting other parameters}
 #' }
 #'
 #' @inherit LoadH5Seurat return
 #'
+#' @importFrom utils data
+#'
 #' @export
 #'
-#' @seealso \code{\link[base]{data}}
+#' @seealso \code{\link[utils]{data}}
 #'
 LoadData <- function(
   ds,
@@ -121,7 +137,7 @@ LoadData <- function(
     stop("Cannot find dataset ", ds, call. = FALSE)
   }
   ds <- NameToPackage(ds = ds)
-  type <- match.arg(arg = type, choices = c('info', 'raw', 'processed'))
+  type <- match.arg(arg = tolower(x = type), choices = c('info', 'raw', 'processed'))
   if (type == 'raw') {
     e <- new.env()
     ds <- gsub(pattern = '\\.SeuratData', replacement = '', x = ds)
@@ -153,7 +169,13 @@ LoadData <- function(
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{UpdateData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}}
+#' \code{\link{InstalledData}} \code{\link{UpdateData}}
+#'
+#' @examples
+#' \dontrun{
+#' RemoveData('pbmc3k')
+#' }
 #'
 RemoveData <- function(ds, lib) {
   UpdateManifest()
@@ -176,7 +198,13 @@ RemoveData <- function(ds, lib) {
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}}
+#' \code{\link{InstalledData}} \code{\link{RemoveData}}
+#'
+#' @examples
+#' \dontrun{
+#' UpdateData(ask = FALSE)
+#' }
 #'
 UpdateData <- function(ask = TRUE, lib.loc = NULL) {
   update.packages(lib.loc = lib.loc, repos = getOption(x = "SeuratData.repo.use"), ask = ask, type = 'source')

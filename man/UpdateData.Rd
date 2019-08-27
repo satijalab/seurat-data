@@ -26,6 +26,13 @@ Invisible \code{NULL}
 \description{
 Update datasets
 }
+\examples{
+\dontrun{
+UpdateData(ask = FALSE)
+}
+
+}
 \seealso{
-\code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
+\code{\link{AvailableData}} \code{\link{InstallData}}
+\code{\link{InstalledData}} \code{\link{RemoveData}}
 }

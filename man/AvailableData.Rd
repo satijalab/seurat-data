@@ -18,6 +18,11 @@ A dataframe with available Seurat datasets. Rownames of the dataframe are the ac
 \description{
 Get list of available datasets
 }
+\examples{
+AvailableData()
+
+}
 \seealso{
-\code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+\code{\link{InstallData}} \code{\link{InstalledData}}
+\code{\link{RemoveData}} \code{\link{UpdateData}}
 }

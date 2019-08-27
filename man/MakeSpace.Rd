@@ -15,4 +15,10 @@ A space (' ') of length \code{n}
 \description{
 Make a space
 }
+\examples{
+\dontrun{
+MakeSpace(10)
+}
+
+}
 \keyword{internal}

@@ -20,6 +20,11 @@ Other columns are extra metadata, and may change as new datasets are made availa
 \description{
 Get a list of installed datasets
 }
+\examples{
+InstalledData()
+
+}
 \seealso{
-\code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+\code{\link{AvailableData}} \code{\link{InstallData}}
+\code{\link{RemoveData}} \code{\link{UpdateData}}
 }

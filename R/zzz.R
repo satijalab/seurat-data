@@ -44,6 +44,12 @@ pkg.env$attached <- vector(mode = 'character')
 #' @author Hadley Wickham
 #' @references \url{https://adv-r.hadley.nz/functions.html#missing-arguments}
 #'
+#' @examples
+#' \dontrun{
+#' 4 %||% 5
+#' NULL %|| 5
+#' }
+#'
 #' @keywords internal
 #'
 `%||%` <- function(lhs, rhs) {
@@ -175,6 +181,13 @@ Enumerate <- function(x) {
 #' These two situations correspond to matrices generated with either
 #' \code{new('matrix')} or \code{matrix()}
 #'
+#' @examples
+#' \dontrun{
+#' IsMatrixEmpty(new('matrix'))
+#' IsMatrixEmpty(matrix())
+#' IsMatrixEmpty(matrix(1:9, nrow = 3))
+#' }
+#'
 #' @keywords internal
 #'
 IsMatrixEmpty <- function(x) {
@@ -189,6 +202,11 @@ IsMatrixEmpty <- function(x) {
 #'
 #' @return A space (' ') of length \code{n}
 #'
+#' @examples
+#' \dontrun{
+#' MakeSpace(10)
+#' }
+#'
 #' @keywords internal
 #'
 MakeSpace <- function(n) {
@@ -200,6 +218,13 @@ MakeSpace <- function(n) {
 #' @param ds Names of datasets
 #'
 #' @return A vector of package names based on dataset names
+#'
+#' @examples
+#' \dontrun{
+#' NameToPackage('cbmc')
+#' NameToPackage('pbmc3k.SeuratData')
+#' NameToPackage('notadataset')
+#' }
 #'
 #' @keywords internal
 #'
