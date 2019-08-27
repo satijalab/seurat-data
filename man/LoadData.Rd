@@ -14,7 +14,7 @@ LoadData(ds, type = c("info", "raw", "processed"), assays = NULL,
 \describe{
   \item{info}{Information about the object and what's stored in it}
   \item{raw}{The raw form of the dataset, no other options are evaluated}
-  \item{processed}{...}
+  \item{processed}{The proccessed data, modular loading avaible by setting other parameters}
 }}
 
 \item{assays}{One of:
@@ -33,7 +33,7 @@ LoadData(ds, type = c("info", "raw", "processed"), assays = NULL,
   \item \code{NULL} for all reductions
   \item \code{NA} or \code{FALSE} for no reductions
 }
-\strong{Note}: Each reduction listed must be associated with an assay listed
+\strong{Note}: Only reductions associated with an assay loaded
 in \code{assays}}
 
 \item{graphs}{One of:
@@ -42,6 +42,8 @@ in \code{assays}}
   \item \code{NULL} for all graphs
   \item \code{NA} or \code{FALSE} for no reductions
 }}
+
+\item{verbose}{Show progress updates}
 }
 \value{
 If \code{type} is info, information about the data contained within the
@@ -51,5 +53,5 @@ h5Seurat file. Otherwise, a \code{Seurat} object with the data requested
 Modularly load a dataset
 }
 \seealso{
-\code{\link[base]{data}}
+\code{\link[utils]{data}}
 }

@@ -19,6 +19,9 @@ NULL
 #' @keywords internal
 #'
 IndexH5Seurat <- function(file, ...) {
+  if (!requireNamespace('hdf5r', quietly = TRUE)) {
+    stop("Please install hdf5r to enable indexing h5Seurat files", call. = FALSE)
+  }
   UseMethod(generic = 'IndexH5Seurat', object = file)
 }
 
@@ -40,7 +43,7 @@ IndexH5Seurat <- function(file, ...) {
 #'   \item \code{NULL} for all reductions
 #'   \item \code{NA} or \code{FALSE} for no reductions
 #' }
-#' \strong{Note}: Each reduction listed must be associated with an assay listed
+#' \strong{Note}: Only reductions associated with an assay loaded
 #' in \code{assays}
 #' @param graphs One of:
 #' \itemize{
@@ -52,6 +55,7 @@ IndexH5Seurat <- function(file, ...) {
 #' @param commands Load command information
 #' @param misc Load miscellaneous data?
 #' @param tools Load tool-specific information?
+#' @param verbose Show progress updates
 #'
 #' @return If \code{type} is info, information about the data contained within the
 #' h5Seurat file. Otherwise, a \code{Seurat} object with the data requested
@@ -63,6 +67,9 @@ IndexH5Seurat <- function(file, ...) {
 #' @keywords internal
 #'
 LoadH5Seurat <- function(file, ...) {
+  if (!requireNamespace('hdf5r', quietly = TRUE)) {
+    stop("Please install hdf5r to enable loading Seurat objects from h5Seurat files", call. = FALSE)
+  }
   UseMethod(generic = 'LoadH5Seurat', object = file)
 }
 
@@ -83,6 +90,9 @@ LoadH5Seurat <- function(file, ...) {
 #' @keywords internal
 #'
 SaveH5Seurat <- function(object, filename, overwrite = FALSE, verbose = TRUE, ...) {
+  if (!requireNamespace('hdf5r', quietly = TRUE)) {
+    stop("Please install hdf5r to enable saving Seurat object to h5Seurat files", call. = FALSE)
+  }
   UseMethod(generic = 'SaveH5Seurat', object = object)
 }
 
@@ -101,22 +111,33 @@ SaveH5Seurat <- function(object, filename, overwrite = FALSE, verbose = TRUE, ..
 #'
 #' @rdname as.list.H5Group
 #' @method as.list H5Group
+#' @export
 #'
 #' @keywords internal
 #'
 as.list.H5Group <- function(x, ...) {
-  return(invisible(x = NULL))
+  objs <- names(x = x)
+  to.return <- vector(mode = 'list', length = length(x = objs))
+  names(x = to.return) <- objs
+  for (i in objs) {
+    to.return[[i]] <- if (inherits(x = x[[i]], what = 'H5Group')) {
+      as.list(x = x[[i]])
+    } else if (length(x = x[[i]]$dims) > 1) {
+      x[[i]][, ]
+    } else {
+      x[[i]][]
+    }
+  }
+  return(to.return)
 }
 
 #' @rdname IndexH5Seurat
 #' @method IndexH5Seurat character
+#' @export
 #'
 #' @keywords internal
 #'
 IndexH5Seurat.character <- function(file, ...) {
-  if (!requireNamespace('hdf5r', quietly = TRUE)) {
-    stop("Please install hdf5r to enable indexing h5Seurat files", call. = FALSE)
-  }
   if (!file.exists(file)) {
     stop("Cannot find h5Seurat file ", file, call = FALSE)
   }
@@ -127,6 +148,7 @@ IndexH5Seurat.character <- function(file, ...) {
 
 #' @rdname IndexH5Seurat
 #' @method IndexH5Seurat H5File
+#' @export
 #'
 #' @keywords internal
 #'
@@ -140,6 +162,7 @@ IndexH5Seurat.H5File <- function(file, ...) {
       slots <- c('counts', 'data', 'scale.data')
       check <- slots %in% names(x = file[['assays']][[x]])
       names(x = check) <- slots
+      check[['scale.data']] <- check[['scale.data']] && file[['assays']][[x]]$exists(name = 'scaled.features')
       return(check)
     },
     simplify = FALSE,
@@ -154,14 +177,17 @@ IndexH5Seurat.H5File <- function(file, ...) {
   reductions <- sapply(
     X = reductions,
     FUN = function(x) {
+      reduc <- file[['reductions']][[x]]
       slots <- c(
         'cell.embeddings',
         'feature.loadings',
         'feature.loadings.projected',
         'jackstraw'
       )
-      check <- slots %in% names(x = file[['reductions']][[x]])
+      check <- slots %in% names(x = reduc)
       names(x = check) <- slots
+      check[['feature.loadings']] <- check[['feature.loadings']] && reduc$exists(name = 'features')
+      check[['feature.loadings.projected']] <- check[['feature.loadings.projected']] && reduc$exists(name = 'projected.features')
       check <- c(
         'assay' = hdf5r::h5attr(
           x = file[['reductions']][[x]],
@@ -187,16 +213,19 @@ IndexH5Seurat.H5File <- function(file, ...) {
     USE.NAMES = TRUE
   )
   index[['graphs']] <- graphs
+  # Get active.assay
+  index[['active.assay']] <- hdf5r::h5attr(x = file, which = 'active.assay')
   # Get commands
   # Get metadata
   # Get misc
   # Get tools
   # Return the index
-  return(structure(.Data = index, class = c('h5SI', 'list')))
+  return(ValidateH5SI(x = structure(.Data = index, class = 'h5SI')))
 }
 
 #' @rdname LoadH5Seurat
 #' @method LoadH5Seurat character
+#' @export
 #'
 #' @keywords internal
 #'
@@ -209,16 +238,13 @@ LoadH5Seurat.character <- function(
   verbose = TRUE,
   ...
 ) {
-  if (!requireNamespace('hdf5r', quietly = TRUE)) {
-    stop("Please install hdf5r to enable loading Seurat objects from h5Seurat files", call. = FALSE)
-  }
   if (!file.exists(file)) {
     stop("Cannot find h5Seurat file ", file, call. = FALSE)
   }
   hfile <- hdf5r::H5File$new(filename = file, mode = 'r')
   on.exit(expr = hfile$close_all())
   return(LoadH5Seurat(
-    x = hfile,
+    file = hfile,
     type = type,
     assays = assays,
     reductions = reductions,
@@ -228,8 +254,13 @@ LoadH5Seurat.character <- function(
   ))
 }
 
+#' @importFrom methods new slot<-
+#' @importFrom Seurat as.sparse CreateAssayObject Key<- GetAssayData SetAssayData
+#' AddMetaData VariableFeatures<- CreateDimReducObject as.Graph Misc<-
+#'
 #' @rdname LoadH5Seurat
 #' @method LoadH5Seurat H5File
+#' @export
 #'
 #' @keywords internal
 #'
@@ -242,29 +273,376 @@ LoadH5Seurat.H5File <- function(
   verbose = TRUE,
   ...
 ) {
-  type <- match.arg(arg = type, choices = c('info', 'object'))
-  # index <- IndexObject(directory = directory)
-  # if (type == 'info') {
-  #   return(index)
-  # }
+  type <- match.arg(arg = tolower(x = type), choices = c('info', 'object'))
+  # object <- new(Class = 'Seurat')
+  cells <- file[['cell.names']][]
+  index <- IndexH5Seurat(file = file)
+  if (type == 'info') {
+    return(index)
+  }
   # Load Assays
+  assay.slots <- c('counts', 'data', 'scale.data')
+  assay.msg <- 'Assay specification must include either the name of an assay or one or more assay slots'
+  assays.all <- is.null(x = assays)
+  if (is.null(x = assays)) {
+    assays <- names(x = index$assays)
+  }
+  if (!is.null(x = names(x = assays))) {
+    assays <- as.list(x = assays)
+  }
+  if (!is.list(x = assays)) {
+    if (any(assays %in% names(x = index$assays)) && any(assays %in% assay.slots)) {
+      stop("Ambiguous assays", call. = FALSE)
+    } else if (any(assays %in% names(x = index$assays))) {
+      assays <- assays[assays %in% names(x = index$assays)]
+      assays <- sapply(
+        X = assays,
+        FUN = function(...) {
+          return(assay.slots)
+        },
+        simplify = FALSE,
+        USE.NAMES = TRUE
+      )
+    } else {
+      assays <- assays[assays %in% assay.slots]
+      if (length(x = assays) < 1) {
+        stop(assay.msg, call. = FALSE)
+      }
+      assays <- list(assays)
+      names(x = assays) <- index$active.assay
+    }
+  } else {
+    for (i in 1:length(x = assays)) {
+      assay.name <- names(x = assays)[i] %||% names(x = index$assays)[i] %||% ''
+      if (!assay.name %in% names(x = index$assays)) {
+        if (assays[[i]][1] %in% names(x = index$assays)) {
+          assay.name <- assays[[i]][1]
+        } else if (any(assays[[i]] %in% assay.slots)) {
+          assay.name <- hdf5r::h5attr(x = file, which = 'active.assay')
+        }
+      }
+      if (nchar(x = assay.name) < 0 || !assay.name %in% names(x = index$assays)) {
+        stop(assay.msg, call. = FALSE)
+      }
+      assay.content <- assays[[i]]
+      if (assay.content[1] %in% names(x = index$assays)) {
+        assay.content <- assay.slots
+      } else {
+        assay.content <- assay.content[assay.content %in% assay.slots]
+        if (length(x = assay.content) < 1) {
+          stop(assay.msg, call. = FALSE)
+        }
+      }
+      assays[i] <- list(assay.content)
+      names(x = assays)[i] <- assay.name
+    }
+  }
+  assays.checked <- assays
+  unique.assays <- unique(x = names(x = assays.checked))
+  assays <- vector(mode = 'list', length = length(x = unique.assays))
+  names(x = assays) <- unique.assays
+  for (i in unique.assays) {
+    assays.use <- which(x = names(x = assays.checked) == i)
+    slots.use <- unique(x = unlist(x = assays.checked[assays.use], use.names = FALSE))
+    assays[[i]] <- slots.use
+  }
+  for (i in Enumerate(x = assays)) {
+    if (!any(c('counts', 'data') %in% i$value)) {
+      stop("All assays must have either a counts or data slot, missing for ", i$name, call. = FALSE)
+    }
+  }
+  if (!index$active.assay %in% names(x = assays)) {
+    warning(
+      "Default assay not requested, using ",
+      names(x = assays)[1],
+      " as default instead",
+      call. = FALSE,
+      immediate. = TRUE
+    )
+    active.assay <- names(x = assays)[1]
+  } else {
+    active.assay <- index$active.assay
+  }
+  assays <- sapply(
+    X = names(x = assays),
+    FUN = function(x) {
+      assay.group <- file[['assays']][[x]]
+      features <- assay.group[['feature.names']][]
+      # Add counts if not data, otherwise add data
+      if ('counts' %in% assays[[x]] && !'data' %in% assays[[x]]) {
+        if (verbose) {
+          message("Initializing ", x, " with counts")
+        }
+        counts.data <- assay.group[['counts']]
+        counts <- if (inherits(x = counts.data, what = 'H5Group')) {
+          as.sparse(x = counts.data)
+        } else {
+          counts.data[, ]
+        }
+        rownames(x = counts.data) <- features
+        colnames(x = counts.data) <- cells
+        obj <- CreateAssayObject(
+          counts = counts.data,
+          min.cells = -1,
+          min.features = -1
+        )
+      } else {
+        if (verbose) {
+          message("Initializing ", x, " with data")
+        }
+        data.data <- assay.group[['data']]
+        data <- if (inherits(x = data.data, what = 'H5Group')) {
+          as.sparse(x = data.data)
+        } else {
+          data.data[, ]
+        }
+        rownames(x = data) <- features
+        colnames(x = data) <- cells
+        obj <- CreateAssayObject(data = data)
+      }
+      Key(object = obj) <- hdf5r::h5attr(x = assay.group, which = 'key')
+      # Add remaining slots
+      for (slot in assays[[x]]) {
+        if (IsMatrixEmpty(x = GetAssayData(object = obj, slot = slot))) {
+          if (verbose) {
+            message("Adding ", slot, " for ", x)
+          }
+          dat.data <- assay.group[[slot]]
+          dat <- if (inherits(x = dat.data, what = 'H5Group')) {
+            as.sparse(x = dat.data)
+          } else {
+            dat.data[, ]
+          }
+          rownames(x = dat) <- if (slot == 'scale.data') {
+            assay.group[['scaled.features']][]
+          } else {
+            features
+          }
+          colnames(x = dat) <- cells
+          obj <- SetAssayData(object = obj, slot = slot, new.data = dat)
+        }
+      }
+      # Add meta features
+      if (assay.group$exists(name = 'meta.features')) {
+        if (verbose) {
+          message("Adding feature-level metadata for ", x)
+        }
+        meta.data <- assay.group[['meta.features']][]
+        rownames(x = meta.data) <- features
+        obj <- AddMetaData(
+          object = obj,
+          metadata = meta.data
+        )
+      } else if (verbose) {
+        message("No feature-level metadata for ", x)
+      }
+      # Add variable feature information
+      if (assay.group$exists(name = 'variable.features')) {
+        if (verbose) {
+          message("Adding variable feature information for ", x)
+        }
+        VariableFeatures(object = obj) <- assay.group[['variable.features']][]
+      } else if (verbose) {
+        message("No variable features for ", x)
+      }
+      # Add miscellaneous information
+      if (assay.group$exists(name = 'misc')) {
+        slot(object = obj, name = 'misc') <- as.list(x = assay.group[['misc']])
+      } else if (verbose) {
+        message("No miscellaneous information for ", x)
+      }
+      return(obj)
+    },
+    simplify = FALSE,
+    USE.NAMES = TRUE
+  )
+  default.assays <- list(assays[[active.assay]])
+  names(x = default.assays) <- active.assay
+  object <- new(
+    Class = 'Seurat',
+    assays = default.assays,
+    active.assay = active.assay,
+    meta.data = data.frame(row.names = cells),
+    version = package_version(x = hdf5r::h5attr(x = file, which = 'version'))
+  )
+  for (assay in names(x = assays)) {
+    if (assay != active.assay) {
+      object[[assay]] <- assays[[assay]]
+    }
+  }
   # Load DimReducs
+  reducs.all <- is.null(x = reductions)
+  if (is.null(x = reductions)) {
+    reductions <- names(x = index$reductions)
+  }
   if (!(isFALSE(x = reductions) || is.na(x = reductions))) {
-    ''
+    reductions <- Filter(
+      f = function(reduc) {
+        return(index$reductions[[reduc]]$assay %in% names(x = assays))
+      },
+      x = reductions
+    )
+    if (length(x = reductions) < 1) {
+      warning(
+        "None of the reductions specified are associated with a loaded assay",
+        call. = FALSE,
+        immediate. = TRUE
+      )
+    } else {
+      reductions <- sapply(
+        X = reductions,
+        FUN = function(x) {
+          reduc.group <- file[['reductions']][[x]]
+          key <- hdf5r::h5attr(x = reduc.group, which = 'key')
+          # Pull cell embeddings
+          if (reduc.group$exists(name = 'cell.embeddings')) {
+            if (verbose) {
+              message("Pulling cell embeddings for ", x)
+            }
+            cell.embeddings <- reduc.group[['cell.embeddings']][, ]
+            rownames(x = cell.embeddings) <- cells
+            colnames(x = cell.embeddings) <- paste0(key, 1:ncol(x = cell.embeddings))
+          } else {
+            if (verbose) {
+              message("No cell embeddings for ", x)
+            }
+            cell.embeddings <- new(Class = 'matrix')
+          }
+          # Pull feature loadings
+          if (index$reductions[[x]]$feature.loadings) {
+            if (verbose) {
+              message("Pulling feature loadings for ", x)
+            }
+            feature.loadings <- reduc.group[['feature.loadings']][, ]
+            rownames(x = feature.loadings) <- reduc.group[['features']][]
+            colnames(x = feature.loadings) <- paste0(key, 1:ncol(x = feature.loadings))
+          } else {
+            if (verbose) {
+              message("No feature loadings for ", x)
+            }
+            feature.loadings <- new(Class = 'matrix')
+          }
+          # Pull projected loadings
+          if (index$reductions[[x]]$feature.loadings.projected) {
+            if (verbose) {
+              message("Pulling projected loadings for ", x)
+            }
+            projected.loadings <- reduc.group[['feature.loadings.projected']][, ]
+            rownames(x = projected.loadings) <- reduc.group[['projected.features']][]
+            colnames(x = projected.loadings) <- paste0(key, 1:ncol(x = projected.loadings))
+          } else {
+            if (verbose) {
+              message("No projected loadings for ", x)
+            }
+            projected.loadings <- new(Class = 'matrix')
+          }
+          obj <- CreateDimReducObject(
+            embeddings = cell.embeddings,
+            loadings = feature.loadings,
+            projected = projected.loadings,
+            assay = index$reductions[[x]]$assay,
+            stdev = if (reduc.group$exists(name = 'stdev')) {
+              reduc.group[['stdev']][]
+            } else {
+              numeric()
+            },
+            key = key
+          )
+          # Add misc
+          if (reduc.group$exists(name = 'misc')) {
+            if (verbose) {
+              message("Pulling miscellaneous information for ", x)
+            }
+            slot(object = obj, name = 'misc') <- as.list(x = reduc.group[['misc']])
+          } else if (verbose) {
+            message("No miscellaneous information for ", x)
+          }
+          # Add JackStraw
+          if (index$reductions[[x]]$jackstraw) {
+            if (verbose) {
+              message("Pulling JackStraw information for ", x)
+            }
+            js <- new(Class = 'JackStrawData')
+            for (slot in names(x = reduc.group[['jackstraw']])) {
+              JS(object = js, slot = slot) <- as.matrix(x = reduc.group[['jackstraw']][[slot]][, ])
+            }
+            JS(object = obj) <- js
+          } else if (verbose) {
+            message("No JackStraw information for ", x)
+          }
+          return(obj)
+        },
+        simplify = FALSE,
+        USE.NAMES = TRUE
+      )
+      for (reduc in names(x = reductions)) {
+        object[[reduc]] <- reductions[[reduc]]
+      }
+    }
   } else if (verbose) {
-    ''
+    message("No dimensional reduction information requested")
   }
   # Load Graphs
+  graphs.all <- is.null(x = graphs)
+  if (is.null(x = graphs)) {
+    graphs.assay <- vapply(
+      X = names(x = index$graphs),
+      FUN = function(x) {
+        return(any(grepl(pattern = x, x = names(x = assays), ignore.case = TRUE)))
+      },
+      FUN.VALUE = logical(length = 1L)
+    )
+    graphs <- unlist(x = index$graphs[graphs.assay])
+  }
   if (!(isFALSE(x = graphs) || is.na(x = graphs))) {
-    ''
+    for (graph in graphs) {
+      if (verbose) {
+        message("Adding graph ", graph)
+      }
+      graph.matrix <- as.sparse(x = file[['graphs']][[graph]])
+      rownames(x = graph.matrix) <- colnames(x = graph.matrix) <- cells
+      object[[graph]] <- as.Graph(x = graph.matrix)
+    }
   } else if (verbose) {
-    ''
+    message("No nearest neighbor graphs requested")
   }
   # Load SeuratCommands
+  if (all(assays.all, reducs.all, graphs.all)) {
+    cmds <- vector(mode = 'list', length = length(x = names(x = file[['commands']])))
+    names(x = cmds) <- names(x = file[['commands']])
+    for (cmd in names(x = file[['commands']])) {
+      if (verbose) {
+        message("Loading command information for ", cmd)
+      }
+      cmds[[cmd]] <- new(
+        Class = 'SeuratCommand',
+        name = hdf5r::h5attr(x = file[['commands']][[cmd]], which = 'name'),
+        time.stamp = as.POSIXct(x = hdf5r::h5attr(
+          x = file[['commands']][[cmd]],
+          which = 'time.stamp'
+        )),
+        call.string = hdf5r::h5attr(
+          x = file[['commands']][[cmd]],
+          which = 'call.string'
+        ),
+        params = as.list(x = file[['commands']][[cmd]])
+      )
+    }
+    slot(object = object, name = 'commands') <- cmds
+  }
   # Load meta.data
+  meta.data <- file[['meta.data']][]
+  object <- AddMetaData(object = object, metadata = meta.data)
   # Load misc
+  for (x in names(x = file[['misc']])) {
+    if (verbose) {
+      message("Adding miscellaneous data ", x)
+    }
+    Misc(object = object, slot = x) <- as.list(x = file[['misc']][[x]])
+  }
   # Load tools
-  return(invisible(x = NULL))
+  slot(object = object, name = 'tools') <- as.list(x = file[['tools']])
+  return(object)
 }
 
 #' Print index information for an h5Seurat Index (h5SI)
@@ -280,6 +658,7 @@ LoadH5Seurat.H5File <- function(
 #'
 #' @rdname print.h5SI
 #' @method print h5SI
+#' @export
 #'
 #' @keywords internal
 #'
@@ -288,10 +667,21 @@ print.h5SI <- function(x, ...) {
     cat(..., '\n', sep = '')
   }
   symbols <- c(red(symbol$cross), green(symbol$tick))
+  x <- ValidateH5SI(x = x)
   # Show assay information
   catn("Assays:")
-  assays <- paste0(' ', names(x = x$assays), ': ')
-  assays <- col_align(text = assays, width = max(nchar(x = assays)))
+  assays <- names(x = x$assays)
+  assays <- paste0(
+    ' ',
+    ifelse(test = assays == x$active.assay, yes = '*', no = ''),
+    assays,
+    ': '
+  )
+  assays <- col_align(
+    text = assays,
+    width = max(nchar(x = assays)),
+    align = 'right'
+  )
   catn(
     MakeSpace(n = max(nchar(x = assays))),
     col_align(
@@ -346,6 +736,10 @@ print.h5SI <- function(x, ...) {
     }
   }
   # Show graph information
+  for (assay in names(x = x$graphs)) {
+    catn("Graphs for ", assay, ":")
+    catn(' ', paste(x$graphs[[assay]], collapse = ', '))
+  }
   return(invisible(x = x))
 }
 
@@ -353,6 +747,7 @@ print.h5SI <- function(x, ...) {
 #'
 #' @rdname SaveH5Seurat
 #' @method SaveH5Seurat default
+#' @export
 #'
 #' @keywords internal
 #'
@@ -387,11 +782,12 @@ SaveH5Seurat.default <- function(
 
 #' @importFrom tools file_ext
 #' @importFrom methods slot slotNames
-#' @importFrom Seurat Project DefaultAssay GetAssayData Key VariableFeatures Misc
-#' Embeddings Loadings Stdev JS Command Tool
+#' @importFrom Seurat Project DefaultAssay Idents GetAssayData Key
+#' VariableFeatures Misc Embeddings Loadings Stdev JS Command Tool
 #'
 #' @rdname SaveH5Seurat
 #' @method SaveH5Seurat Seurat
+#' @export
 #'
 #' @keywords internal
 #'
@@ -402,9 +798,6 @@ SaveH5Seurat.Seurat <- function(
   verbose = TRUE,
   ...
 ) {
-  if (!requireNamespace('hdf5r', quietly = TRUE)) {
-    stop("Please install hdf5r to enable saving Seurat object to h5Seurat files", call. = FALSE)
-  }
   if (file_ext(x = filename) != 'h5Seurat') {
     filename <- paste0(filename, 'h5Seurat')
   }
@@ -430,6 +823,15 @@ SaveH5Seurat.Seurat <- function(
     name = 'version'
   ))
   hdf5r::h5attr(x = hfile, which = 'active.assay') <- DefaultAssay(object = object)
+  # Add meta.data, identity class, and cell names
+  hfile[['meta.data']] <- object[[]]
+  hfile[['active.ident']] <- Idents(object = object)
+  hfile[['cell.names']] <- colnames(x = object)
+  # Prepare group information
+  required.groups <- c('assays', 'reductions', 'graphs', 'commands', 'tools', 'misc')
+  for (group in required.groups) {
+    hfile$create_group(name = group)
+  }
   # Add Assays
   assays <- Filter(
     f = function(x) {
@@ -437,7 +839,7 @@ SaveH5Seurat.Seurat <- function(
     },
     x = names(x = object)
   )
-  assay.group <- hfile$create_group(name = 'assays')
+  assay.group <- hfile[['assays']]
   for (assay in assays) {
     obj <- object[[assay]]
     obj.group <- assay.group$create_group(name = assay)
@@ -452,11 +854,14 @@ SaveH5Seurat.Seurat <- function(
           obj.group[[i]] <- dat
         } else if (inherits(x = dat, what = 'dgCMatrix')) {
           dat.grp <- obj.group$create_group(name = i)
-          dat.grp[['indices']] <- slot(object = dat, name = 'i') - 1
+          dat.grp[['indices']] <- slot(object = dat, name = 'i')
           dat.grp[['indptr']] <- slot(object = dat, name = 'p')
           dat.grp[['data']] <- slot(object = dat, name = 'x')
         } else {
           warning("wrong data")
+        }
+        if (i == 'scale.data') {
+          obj.group[['scaled.features']] <- rownames(x = dat)
         }
       } else if (verbose) {
         message("No data found in ", i, " for ", assay)
@@ -487,7 +892,7 @@ SaveH5Seurat.Seurat <- function(
       misc.group <- obj.group$create_group(name = 'misc')
       for (i in names(x = Misc(object = obj))) {
         if (verbose) {
-          message("Adding miscellaneous data ", i, "for ", assay)
+          message("Adding miscellaneous data: ", i, "for ", assay)
         }
         misc.group[[i]] <- Misc(object = obj, slot = i)
       }
@@ -498,7 +903,7 @@ SaveH5Seurat.Seurat <- function(
     obj.group[['feature.names']] <- rownames(x = obj)
   }
   # Add DimReducs
-  reduc.group <- hfile$create_group(name = 'reductions')
+  reduc.group <- hfile[['reductions']]
   reductions <- Filter(
     f = function(x) {
       return(inherits(x = object[[x]], what = 'DimReduc'))
@@ -526,7 +931,14 @@ SaveH5Seurat.Seurat <- function(
           if (verbose) {
             message("Adding ", type, " for ", reduc)
           }
-          obj.group[[i]] <- Loadings(object = obj, projected = projected)
+          loadings <- Loadings(object = obj, projected = projected)
+          obj.group[[i]] <- loadings
+          features <- ifelse(
+            test = projected,
+            yes = 'projected.features',
+            no = 'features'
+          )
+          obj.group[[features]] <- rownames(x = loadings)
         } else if (verbose) {
           message("No ", type, " for ", reduc)
         }
@@ -560,7 +972,7 @@ SaveH5Seurat.Seurat <- function(
       misc.group <- obj.group$create_group(name = 'misc')
       for (i in Enumerate(x = slot(object = obj, name = 'misc'))) {
         if (verbose) {
-          message("Adding miscellaneous data ", i$name)
+          message("Adding miscellaneous data: ", i$name)
         }
         misc.group[[i$name]] <- i$value
       }
@@ -569,7 +981,7 @@ SaveH5Seurat.Seurat <- function(
     message("No dimensional reduction information present")
   }
   # Add Graphs
-  graph.group <- hfile$create_group(name = 'graphs')
+  graph.group <- hfile[['graphs']]
   graphs <- Filter(
     f = function(x) {
       return(inherits(x = object[[x]], what = 'Graph'))
@@ -590,9 +1002,8 @@ SaveH5Seurat.Seurat <- function(
     message("No nearest-neighbor graphs present")
   }
   # Add SeuratCommands
-  cmd.group <- hfile$create_group(name = 'commands')
+  cmd.group <- hfile[['commands']]
   for (i in Command(object = object)) {
-    i.group <- cmd.group$create_group(name = i)
     if (verbose) {
       message("Adding command ", i)
     }
@@ -602,21 +1013,29 @@ SaveH5Seurat.Seurat <- function(
         x = as.list(x = Command(object = object, command = i))
       ),
       name = i,
-      hgroup = i.group
+      hgroup = cmd.group
     )
+    cmd <- Command(object = object, command = i)
+    for (slot in slotNames(x = cmd)) {
+      if (slot == 'params') {
+        next
+      }
+      hdf5r::h5attr(x = cmd.group[[i]], which = slot) <- as.character(x = slot(
+        object = cmd,
+        name = slot
+      ))
+    }
   }
-  # Add meta.data
-  hfile[['meta.data']] <- object[[]]
   # Add misc
-  misc.group <- hfile$create_group(name = 'misc')
+  misc.group <- hfile[['misc']]
   for (m in Enumerate(x = Misc(object = object))) {
     if (verbose) {
-      message("Adding miscellaneous data ", m$name)
+      message("Adding miscellaneous data: ", m$name)
     }
     WriteH5List(x = m$value, name = m$name, hgroup = misc.group)
   }
   # Add tools
-  tool.group <- hfile$create_group(name = 'tools')
+  tool.group <- hfile[['tools']]
   for (x in Tool(object = object)) {
     if (verbose) {
       message("Writing data for tool ", x)
@@ -630,11 +1049,39 @@ SaveH5Seurat.Seurat <- function(
 # Standard functions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+h5SI <- function(...) {
+  object <- list(
+    'assays' = list(),
+    'reductions' = list(),
+    'graphs' = list(),
+    'active.assay' = vector(mode = 'character', length = 1L),
+    'meta.data' = vector(mode = 'character'),
+    ''
+  )
+  return(structure(.Data = object, class = 'h5SI'))
+}
+
+#' Validate an h5Seurat Index
+#'
+#' @param x An h5Seurat Index (h5SI)
+#'
+#' @return \code{x} if valid, otherwise a modified \code{x} to be valid
+#'
+#' @keywords internal
+#'
+ValidateH5SI <- function(x) {
+  if (!inherits(x = x, what = 'h5SI')) {
+    stop("'x' must be an h5Seurat index", call. = FALSE)
+  }
+  return(x)
+}
+
 #' Write a list as a series of HDF5 groups and datasets
 #'
 #' @param x A list
 #' @param name Name to save dataset as
-#' @param hgroup An HDF5 file or group (\code{H5File} or \code{H5Group} objects from hdf5r)
+#' @param hgroup An HDF5 file or group (\code{H5File} or
+#' \code{H5Group} objects from hdf5r)
 #'
 #' @return Invisibly returns \code{NULL}
 #'

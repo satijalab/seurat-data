@@ -11,7 +11,8 @@ WriteH5List(x, name, hgroup)
 
 \item{name}{Name to save dataset as}
 
-\item{hgroup}{An HDF5 file or group (\code{H5File} or \code{H5Group} objects from hdf5r)}
+\item{hgroup}{An HDF5 file or group (\code{H5File} or
+\code{H5Group} objects from hdf5r)}
 }
 \value{
 Invisibly returns \code{NULL}

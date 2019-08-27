@@ -35,7 +35,7 @@ LoadH5Seurat(file, ...)
   \item \code{NULL} for all reductions
   \item \code{NA} or \code{FALSE} for no reductions
 }
-\strong{Note}: Each reduction listed must be associated with an assay listed
+\strong{Note}: Only reductions associated with an assay loaded
 in \code{assays}}
 
 \item{graphs}{One of:
@@ -44,6 +44,8 @@ in \code{assays}}
   \item \code{NULL} for all graphs
   \item \code{NA} or \code{FALSE} for no reductions
 }}
+
+\item{verbose}{Show progress updates}
 
 \item{meta.data}{Load object metadata?}
 
