@@ -163,7 +163,7 @@ LoadData <- function(
     stop("Cannot find dataset ", ds, call. = FALSE)
   }
   ds <- NameToPackage(ds = ds)
-  choices <- installed[ds, 'other.datasets', drop = TRUE]
+  choices <- na.omit(object = installed[ds, 'other.datasets', drop = TRUE])
   info <- grepl(pattern = '^info', x = type)
   type <- gsub(pattern = '^info_', replacement = '', x = type)
   type <- match.arg(arg = tolower(x = type), choices = c('info', 'raw', choices))
