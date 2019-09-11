@@ -60,7 +60,7 @@ IndexH5Seurat <- function(file, ...) {
 #' @return If \code{type} is info, information about the data contained within the
 #' h5Seurat file. Otherwise, a \code{Seurat} object with the data requested
 #'
-#' @rdname LoadH5Seurat
+#' @export
 #'
 #' @seealso \code{\link{SaveH5Seurat}} \code{\link{IndexH5Seurat}}
 #'
@@ -83,7 +83,7 @@ LoadH5Seurat <- function(file, ...) {
 #'
 #' @return Invisibly returns the name of the h5Seurat file
 #'
-#' @rdname SaveH5Seurat
+#' @export
 #'
 #' @seealso \code{\link{LoadH5Seurat}} \code{\link{IndexH5Seurat}}
 #'
@@ -322,7 +322,8 @@ LoadH5Seurat.H5File <- function(
         stop(assay.msg, call. = FALSE)
       }
       assays <- list(assays)
-      names(x = assays) <- index$active.assay
+      assays <- rep_len(x = assays, length.out = length(x = index$assays))
+      names(x = assays) <- names(x = index$assays)
     }
   } else {
     for (i in 1:length(x = assays)) {
@@ -358,7 +359,7 @@ LoadH5Seurat.H5File <- function(
     assays.use <- which(x = names(x = assays.checked) == i)
     slots.use <- unique(x = unlist(x = assays.checked[assays.use], use.names = FALSE))
     slots.use <- slots.use[match(x = names(x = index$assays[[i]]), table = slots.use)]
-    slots.use <- slots.use[index$assays[[i]]]
+    slots.use <- na.omit(object = slots.use[index$assays[[i]]])
     assays[[i]] <- slots.use
   }
   for (i in Enumerate(x = assays)) {
@@ -608,6 +609,9 @@ LoadH5Seurat.H5File <- function(
       FUN.VALUE = logical(length = 1L)
     )
     graphs <- unlist(x = index$graphs[graphs.assay])
+    if (length(x = graphs) == 0) {
+      graphs <- FALSE
+    }
   }
   if (!(isFALSE(x = graphs) || is.na(x = graphs))) {
     for (graph in graphs) {
