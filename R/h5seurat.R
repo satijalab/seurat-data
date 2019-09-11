@@ -395,10 +395,10 @@ LoadH5Seurat.H5File <- function(
         } else {
           counts.data[, ]
         }
-        rownames(x = counts.data) <- features
-        colnames(x = counts.data) <- cells
+        rownames(x = counts) <- features
+        colnames(x = counts) <- cells
         obj <- CreateAssayObject(
-          counts = counts.data,
+          counts = counts,
           min.cells = -1,
           min.features = -1
         )
