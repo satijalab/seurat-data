@@ -4,17 +4,24 @@
 \alias{LoadData}
 \title{Modularly load a dataset}
 \usage{
-LoadData(ds, type = c("info", "raw", "processed"), assays = NULL,
-  reductions = NULL, graphs = NULL, verbose = TRUE)
+LoadData(ds, type = "info", assays = NULL, reductions = NULL,
+  graphs = NULL, verbose = TRUE)
 }
 \arguments{
-\item{ds}{Optional name of dataset to load}
+\item{ds}{Name of dataset to load}
 
 \item{type}{How to load the \code{Seurat} object; choose from
 \describe{
-  \item{info}{Information about the object and what's stored in it}
+  \item{info}{
+  Information about the object and what's stored in it; to specify a dataset
+  to get information for, pass 'info_\code{name of dataset}' based on the name
+  of the dataset in the \code{other.datasets} column of the data manifest
+  }
   \item{raw}{The raw form of the dataset, no other options are evaluated}
-  \item{processed}{The proccessed data, modular loading avaible by setting other parameters}
+  \item{...}{
+  Name of dataset in the \code{other.datasets} column of the data manifest
+  corresponding to the dataset desired (eg. 'processed' for ifnb)
+  }
 }}
 
 \item{assays}{One of:
@@ -51,6 +58,14 @@ h5Seurat file. Otherwise, a \code{Seurat} object with the data requested
 }
 \description{
 Modularly load a dataset
+}
+\examples{
+\dontrun{
+LoadData('ifnb')
+ifnb.raw <- LoadData('ifnb', type = 'raw')
+ifnb.proccessed <- LoadData('ifnb', type = 'processed')
+}
+
 }
 \seealso{
 \code{\link[utils]{data}}

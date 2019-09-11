@@ -119,12 +119,19 @@ InstalledData <- function() {
 #' Modularly load a dataset
 #'
 #' @inheritParams LoadH5Seurat
-#' @param ds Optional name of dataset to load
+#' @param ds Name of dataset to load
 #' @param type How to load the \code{Seurat} object; choose from
 #' \describe{
-#'   \item{info}{Information about the object and what's stored in it}
+#'   \item{info}{
+#'   Information about the object and what's stored in it; to specify a dataset
+#'   to get information for, pass 'info_\code{name of dataset}' based on the name
+#'   of the dataset in the \code{other.datasets} column of the data manifest
+#'   }
 #'   \item{raw}{The raw form of the dataset, no other options are evaluated}
-#'   \item{processed}{The proccessed data, modular loading avaible by setting other parameters}
+#'   \item{...}{
+#'   Name of dataset in the \code{other.datasets} column of the data manifest
+#'   corresponding to the dataset desired (eg. 'processed' for ifnb)
+#'   }
 #' }
 #'
 #' @inherit LoadH5Seurat return
@@ -135,36 +142,53 @@ InstalledData <- function() {
 #'
 #' @seealso \code{\link[utils]{data}}
 #'
+#' @examples
+#' \dontrun{
+#' LoadData('ifnb')
+#' ifnb.raw <- LoadData('ifnb', type = 'raw')
+#' ifnb.proccessed <- LoadData('ifnb', type = 'processed')
+#' }
+#'
 LoadData <- function(
   ds,
-  type = c('info', 'raw', 'processed'),
+  type = 'info',
   assays = NULL,
   reductions = NULL,
   graphs = NULL,
   verbose = TRUE
 ) {
-  .NotYetImplemented()
+  ds <- ds[1]
   installed <- InstalledData()
   if (!NameToPackage(ds = ds) %in% rownames(x = installed)) {
     stop("Cannot find dataset ", ds, call. = FALSE)
   }
   ds <- NameToPackage(ds = ds)
-  type <- match.arg(arg = tolower(x = type), choices = c('info', 'raw', 'processed'))
+  choices <- installed[ds, 'other.datasets', drop = TRUE]
+  info <- grepl(pattern = '^info', x = type)
+  type <- gsub(pattern = '^info_', replacement = '', x = type)
+  type <- match.arg(arg = tolower(x = type), choices = c('info', 'raw', choices))
   if (type == 'raw') {
     e <- new.env()
     ds <- gsub(pattern = '\\.SeuratData', replacement = '', x = ds)
     data(list = ds, envir = e)
     return(e[[ds]])
   }
-  .NotYetImplemented()
-  type <- match.arg(arg = type, choices = c('info', 'processed'))
+  if (length(x = choices) < 1) {
+    stop(
+      "No alternate datasets available for ",
+      gsub(pattern = '.SeuratData$', replacement = '', x = ds),
+      call. = FALSE
+    )
+  }
+  type <- switch(
+    EXPR = type,
+    'info' = choices[1],
+    type
+  )
+  filename <- file.path('extdata', 'objects', paste0(type, '.h5Seurat'))
   return(LoadH5Seurat(
-    file = system.file(
-      file.path('extdata', 'processed.h5Seurat'),
-      package = ds,
-      mustWork = TRUE
-    ),
-    type = ifelse(test = type == 'processed', yes = 'object', no = type),
+    file = system.file(filename, package = ds, mustWork = TRUE),
+    type = ifelse(test = info, yes = 'info', no = 'object'),
     assays = assays,
     reductions = reductions,
     graphs = graphs,
