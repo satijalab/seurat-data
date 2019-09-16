@@ -5,7 +5,7 @@
 \title{Modularly load a dataset}
 \usage{
 LoadData(ds, type = "info", assays = NULL, reductions = NULL,
-  graphs = NULL, verbose = TRUE)
+  graphs = NULL, object = NULL, overwrite = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{ds}{Name of dataset to load}
@@ -48,6 +48,8 @@ LoadData(ds, type = "info", assays = NULL, reductions = NULL,
   \item \code{NULL} for all graphs
   \item \code{NA} or \code{FALSE} for no reductions
 }}
+
+\item{object}{A \code{Seurat} object to append data to}
 
 \item{verbose}{Show progress updates}
 }

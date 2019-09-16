@@ -118,6 +118,7 @@ InstalledData <- function() {
 
 #' Modularly load a dataset
 #'
+#' @inheritParams AppendData
 #' @inheritParams LoadH5Seurat
 #' @param ds Name of dataset to load
 #' @param type How to load the \code{Seurat} object; choose from
@@ -155,6 +156,8 @@ LoadData <- function(
   assays = NULL,
   reductions = NULL,
   graphs = NULL,
+  object = NULL,
+  overwrite = FALSE,
   verbose = TRUE
 ) {
   ds <- ds[1]
@@ -186,14 +189,28 @@ LoadData <- function(
     type
   )
   filename <- file.path('extdata', 'objects', paste0(type, '.h5Seurat'))
-  return(LoadH5Seurat(
-    file = system.file(filename, package = ds, mustWork = TRUE),
-    type = ifelse(test = info, yes = 'info', no = 'object'),
-    assays = assays,
-    reductions = reductions,
-    graphs = graphs,
-    verbose = verbose
-  ))
+  filename <- system.file(filename, package = ds, mustWork = TRUE)
+  object <- if (is.null(x = object) && !info) {
+    LoadH5Seurat(
+      file = filename,
+      type = ifelse(test = info, yes = 'info', no = 'object'),
+      assays = assays,
+      reductions = reductions,
+      graphs = graphs,
+      verbose = verbose
+    )
+  } else {
+    AppendData(
+      file = filename,
+      object = object,
+      assays = assays,
+      reductions = reductions,
+      graphs = graphs,
+      overwrite = overwrite,
+      verbose = verbose
+    )
+  }
+  return(object)
 }
 
 #' Remove a dataset
