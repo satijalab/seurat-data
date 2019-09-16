@@ -13,10 +13,12 @@ IndexH5Seurat(file, ...)
 \method{IndexH5Seurat}{H5File}(file, ...)
 }
 \arguments{
-\item{...}{...}
+\item{file}{Name of h5Seurat or connected h5Seurat file to load}
+
+\item{...}{Arguments passed to other methods}
 }
 \value{
-...
+An object of class \code{h5SI}
 }
 \description{
 Index an H5Seurat object

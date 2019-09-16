@@ -28,7 +28,7 @@ LoadData(ds, type = "info", assays = NULL, reductions = NULL,
 \itemize{
   \item A character vector with names of assays
   \item A character vector with one or more of \code{counts}, \code{data},
-  \code{scale.data} describing which slots of the \strong{default assay}
+  \code{scale.data} describing which slots of \strong{all assays} to load
   \item A named list where each entry is either the name of an assay or a vector
   describing which slots (described above) to take from which assay
   \item \code{NULL} for all assays
@@ -40,8 +40,7 @@ LoadData(ds, type = "info", assays = NULL, reductions = NULL,
   \item \code{NULL} for all reductions
   \item \code{NA} or \code{FALSE} for no reductions
 }
-\strong{Note}: Only reductions associated with an assay loaded
-in \code{assays}}
+\strong{Note}: Only reductions associated with an assay loaded in \code{assays}}
 
 \item{graphs}{One of:
 \itemize{
