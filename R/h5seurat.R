@@ -896,9 +896,14 @@ SaveH5Seurat.Seurat <- function(
       misc.group <- obj.group$create_group(name = 'misc')
       for (i in names(x = Misc(object = obj))) {
         if (verbose) {
-          message("Adding miscellaneous data: ", i, "for ", assay)
+          message("Adding miscellaneous data ", i, " for ", assay)
         }
-        misc.group[[i]] <- Misc(object = obj, slot = i)
+        WriteH5List(
+          x = Misc(object = obj, slot = i),
+          name = i,
+          hgroup = misc.group
+        )
+        # misc.group[[i]] <- Misc(object = obj, slot = i)
       }
     } else if (verbose) {
       message("No miscellaneous data found for ", assay)
@@ -1488,9 +1493,10 @@ WriteH5List <- function(x, name, hgroup) {
   if (is.list(x = x) && !is.data.frame(x = x)) {
     xgroup <- hgroup$create_group(name = name)
     for (i in Enumerate(x = x)) {
-      if (is.list(x = i$value) && !is.data.frame(x = i$value)) {
+      if ((is.list(x = i$value) && !is.data.frame(x = i$value)) || isS4(i$value)) {
         WriteH5List(x = i$value, name = i$name, hgroup = xgroup)
       } else if (!is.null(x = i$value)) {
+        # message(i$name, ': ', class(i$value))
         xgroup[[i$name]] <- i$value
       }
     }
