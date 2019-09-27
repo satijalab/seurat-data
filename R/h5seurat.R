@@ -803,7 +803,7 @@ SaveH5Seurat.Seurat <- function(
   ...
 ) {
   if (file_ext(x = filename) != 'h5Seurat') {
-    filename <- paste0(filename, 'h5Seurat')
+    filename <- paste0(filename, '.h5Seurat')
   }
   if (file.exists(filename)) {
     if (overwrite) {
