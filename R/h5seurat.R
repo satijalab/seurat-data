@@ -34,6 +34,8 @@ AppendData <- function(file, object, ...) {
 #'
 #' @rdname IndexH5Seurat
 #'
+#' @export
+#'
 #' @seealso \code{\link{LoadH5Seurat}} \code{\link{SaveH5Seurat}}
 #'
 #' @keywords internal
@@ -139,7 +141,16 @@ AppendData.character <- function(
   }
   hfile <- hdf5r::H5File$new(filename = file, mode = 'r')
   on.exit(expr = hfile$close_all())
-  return(AppendData(file = hfile, object = object, ...))
+  return(AppendData(
+    file = hfile,
+    object = object,
+    assays = assays,
+    reductions = reductions,
+    graphs = graphs,
+    overwrite = overwrite,
+    verbose = verbose,
+    ...
+  ))
 }
 
 #' @importFrom methods slot slot<-
