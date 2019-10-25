@@ -12,11 +12,13 @@ NULL
 #'   \item{InstalledVersion}{Version of dataset installed, \code{NA} if not installed}
 #' }
 #'
-#' Other columns are extra metadata, and may change as new datasets are made available
-#'
 #' @export
 #'
-#' @seealso \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+#' @seealso \code{\link{InstallData}} \code{\link{InstalledData}}
+#' \code{\link{RemoveData}} \code{\link{UpdateData}}
+#'
+#' @examples
+#' AvailableData()
 #'
 AvailableData <- function() {
   UpdateManifest()
@@ -35,10 +37,22 @@ AvailableData <- function() {
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstalledData}}
+#' \code{\link{RemoveData}} \code{\link{UpdateData}}
+#'
+#' @examples
+#' \dontrun{
+#' InstallData('pbmc3k')
+#' }
 #'
 InstallData <- function(ds, force.reinstall = FALSE, ...) {
   UpdateManifest()
+  if (pkg.env$source != 'remote') {
+    stop(
+      "No access to remote SeuratData repository, unable to install new datasets",
+      call. = FALSE
+    )
+  }
   pkgs <- NameToPackage(ds = ds)
   if (!force.reinstall) {
     installed <- intersect(x = pkgs, y = rownames(x = InstalledData()))
@@ -46,7 +60,7 @@ InstallData <- function(ds, force.reinstall = FALSE, ...) {
       warning(
         "The following packages are already installed and will not be reinstalled: ",
         paste(
-          gsub(pattern = '\\.SeuratData', replacement = '', x = installed),
+          gsub(pattern = pkg.key, replacement = '', x = installed),
           collapse = ', '
         ),
         call. = FALSE,
@@ -63,7 +77,12 @@ InstallData <- function(ds, force.reinstall = FALSE, ...) {
   for (p in pkgs2[pkgs2 %in% search()]) {
     detach(name = p, unload = TRUE, character.only = TRUE)
   }
-  install.packages(pkgs = pkgs, repos = getOption(x = "SeuratData.repo.use"), type = 'source', ...)
+  install.packages(
+    pkgs = pkgs,
+    repos = getOption(x = "SeuratData.repo.use"),
+    type = 'source',
+    ...
+  )
   for (pkg in pkgs) {
     attachNamespace(ns = pkg)
     pkg.env$attached <- c(pkg.env$attached, pkg)
@@ -86,11 +105,112 @@ InstallData <- function(ds, force.reinstall = FALSE, ...) {
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}}
+#' \code{\link{RemoveData}} \code{\link{UpdateData}}
+#'
+#' @examples
+#' InstalledData()
 #'
 InstalledData <- function() {
   dat <- AvailableData()
   return(dat[which(x = dat$Installed, ), , drop = FALSE])
+}
+
+#' Modularly load a dataset
+#'
+#' @inheritParams AppendData
+#' @inheritParams LoadH5Seurat
+#' @param ds Name of dataset to load
+#' @param type How to load the \code{Seurat} object; choose from
+#' \describe{
+#'   \item{info}{
+#'   Information about the object and what's stored in it; to specify a dataset
+#'   to get information for, pass 'info_\code{name of dataset}' based on the name
+#'   of the dataset in the \code{other.datasets} column of the data manifest
+#'   }
+#'   \item{raw}{The raw form of the dataset, no other options are evaluated}
+#'   \item{...}{
+#'   Name of dataset in the \code{other.datasets} column of the data manifest
+#'   corresponding to the dataset desired (eg. 'processed' for ifnb)
+#'   }
+#' }
+#'
+#' @inherit LoadH5Seurat return
+#'
+#' @importFrom utils data
+#'
+#' @export
+#'
+#' @seealso \code{\link[utils]{data}}
+#'
+#' @examples
+#' \dontrun{
+#' LoadData('ifnb')
+#' ifnb.raw <- LoadData('ifnb', type = 'raw')
+#' ifnb.proccessed <- LoadData('ifnb', type = 'processed')
+#' }
+#'
+LoadData <- function(
+  ds,
+  type = 'info',
+  assays = NULL,
+  reductions = NULL,
+  graphs = NULL,
+  object = NULL,
+  overwrite = FALSE,
+  verbose = TRUE
+) {
+  ds <- ds[1]
+  installed <- InstalledData()
+  if (!NameToPackage(ds = ds) %in% rownames(x = installed)) {
+    stop("Cannot find dataset ", ds, call. = FALSE)
+  }
+  ds <- NameToPackage(ds = ds)
+  choices <- na.omit(object = installed[ds, 'other.datasets', drop = TRUE])
+  info <- grepl(pattern = '^info', x = type)
+  type <- gsub(pattern = '^info_', replacement = '', x = type)
+  type <- match.arg(arg = tolower(x = type), choices = c('info', 'raw', choices))
+  if (type == 'raw') {
+    e <- new.env()
+    ds <- gsub(pattern = '\\.SeuratData', replacement = '', x = ds)
+    data(list = ds, envir = e)
+    return(e[[ds]])
+  }
+  if (length(x = choices) < 1) {
+    stop(
+      "No alternate datasets available for ",
+      gsub(pattern = '.SeuratData$', replacement = '', x = ds),
+      call. = FALSE
+    )
+  }
+  type <- switch(
+    EXPR = type,
+    'info' = choices[1],
+    type
+  )
+  filename <- file.path('extdata', 'objects', paste0(type, '.h5Seurat'))
+  filename <- system.file(filename, package = ds, mustWork = TRUE)
+  object <- if (is.null(x = object) && !info) {
+    LoadH5Seurat(
+      file = filename,
+      type = ifelse(test = info, yes = 'info', no = 'object'),
+      assays = assays,
+      reductions = reductions,
+      graphs = graphs,
+      verbose = verbose
+    )
+  } else {
+    AppendData(
+      file = filename,
+      object = object,
+      assays = assays,
+      reductions = reductions,
+      graphs = graphs,
+      overwrite = overwrite,
+      verbose = verbose
+    )
+  }
+  return(object)
 }
 
 #' Remove a dataset
@@ -102,7 +222,13 @@ InstalledData <- function() {
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{UpdateData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}}
+#' \code{\link{InstalledData}} \code{\link{UpdateData}}
+#'
+#' @examples
+#' \dontrun{
+#' RemoveData('pbmc3k')
+#' }
 #'
 RemoveData <- function(ds, lib) {
   UpdateManifest()
@@ -125,9 +251,22 @@ RemoveData <- function(ds, lib) {
 #'
 #' @export
 #'
-#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{RemoveData}}
+#' @seealso \code{\link{AvailableData}} \code{\link{InstallData}}
+#' \code{\link{InstalledData}} \code{\link{RemoveData}}
+#'
+#' @examples
+#' \dontrun{
+#' UpdateData(ask = FALSE)
+#' }
 #'
 UpdateData <- function(ask = TRUE, lib.loc = NULL) {
+  UpdateManifest()
+  if (pkg.env$source != 'remote') {
+    stop(
+      "No access to remote SeuratData repository, unable to update datasets",
+      call. = FALSE
+    )
+  }
   update.packages(lib.loc = lib.loc, repos = getOption(x = "SeuratData.repo.use"), ask = ask, type = 'source')
   UpdateManifest()
   invisible(x = NULL)

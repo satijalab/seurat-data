@@ -15,4 +15,12 @@ A vector of package names based on dataset names
 \description{
 Find dataset packages based on name
 }
+\examples{
+\dontrun{
+NameToPackage('cbmc')
+NameToPackage('pbmc3k.SeuratData')
+NameToPackage('notadataset')
+}
+
+}
 \keyword{internal}

@@ -1,7 +1,7 @@
 Package: SeuratData
 Type: Package
 Title: Install and Manage Seurat Datasets
-Version: 0.1.0
+Version: 0.1.0.9001
 Date: 2019-07-17
 Authors@R: c(
   person(given = 'Rahul', family = 'Satija', email = 'rsatija@nygenome.org', role = 'aut', comment = c(ORCID = '0000-0001-9448-8833')),
@@ -21,8 +21,15 @@ RoxygenNote: 6.1.1
 Imports:
     cli,
     crayon,
+    methods,
+    Seurat (>= 3.0.2),
+    rappdirs,
     stats,
+    tools,
     utils
-Collate: 
+Collate:
     'zzz.R'
+    'h5seurat.R'
     'seurat_data.R'
+Suggests:
+    hdf5r (>= 1.2.0)

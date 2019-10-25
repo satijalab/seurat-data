@@ -19,6 +19,13 @@ Invisible \code{NULL}
 \description{
 Install a dataset
 }
+\examples{
+\dontrun{
+InstallData('pbmc3k')
+}
+
+}
 \seealso{
-\code{\link{AvailableData}} \code{\link{InstalledData}} \code{\link{RemoveData}} \code{\link{UpdateData}}
+\code{\link{AvailableData}} \code{\link{InstalledData}}
+\code{\link{RemoveData}} \code{\link{UpdateData}}
 }
