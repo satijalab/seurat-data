@@ -1,8 +1,8 @@
 Package: SeuratData
 Type: Package
 Title: Install and Manage Seurat Datasets
-Version: 0.1.0.9001
-Date: 2019-07-17
+Version: 0.2.0
+Date: 2019-11-15
 Authors@R: c(
   person(given = 'Rahul', family = 'Satija', email = 'rsatija@nygenome.org', role = 'aut', comment = c(ORCID = '0000-0001-9448-8833')),
   person(given = 'Paul', family = 'Hoffman', email = 'phoffman@nygenome.org', role = c('aut', 'cre'), comment = c(ORCID = '0000-0002-7693-8957')),
