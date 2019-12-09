@@ -16,6 +16,13 @@ RemoveData(ds, lib)
 \description{
 Remove a dataset
 }
+\examples{
+\dontrun{
+RemoveData('pbmc3k')
+}
+
+}
 \seealso{
-\code{\link{AvailableData}} \code{\link{InstallData}} \code{\link{InstalledData}} \code{\link{UpdateData}}
+\code{\link{AvailableData}} \code{\link{InstallData}}
+\code{\link{InstalledData}} \code{\link{UpdateData}}
 }
