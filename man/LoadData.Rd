@@ -4,18 +4,17 @@
 \alias{LoadData}
 \title{Modularly load a dataset}
 \usage{
-LoadData(ds, type = c("info", "raw", "processed"), assays = NULL,
-  reductions = NULL, graphs = NULL, verbose = TRUE)
+LoadData(ds, type = "default")
 }
 \arguments{
 \item{ds}{Optional name of dataset to load}
 
-\item{type}{How to load the \code{Seurat} object; choose from
-\describe{
-  \item{info}{Information about the object and what's stored in it}
-  \item{raw}{The raw form of the dataset, no other options are evaluated}
-  \item{processed}{The proccessed data, modular loading avaible by setting other parameters}
-}}
+\item{type}{How to load the \code{Seurat} object; choose from either
+'default' for the default dataset or any dataset listed in the
+\code{other.datasets} section of the data manifest}
+}
+\value{
+A \code{Seurat} object with the dataset asked for
 }
 \description{
 Modularly load a dataset

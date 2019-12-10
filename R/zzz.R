@@ -448,12 +448,12 @@ UpdateManifest <- function() {
     x = avail.pkgs$InstalledVersion,
     strict = FALSE
   )
-  # TODO: remove these when we allow loading of processed datasets
-  cols.remove <- c('default.dataset', 'other.datasets')
-  if (any(cols.remove %in% colnames(x = avail.pkgs))) {
-    ds.index <- which(x = colnames(x = avail.pkgs) %in% cols.remove)
-    avail.pkgs <- avail.pkgs[, -ds.index]
-  }
+  # # TODO: remove these when we allow loading of processed datasets
+  # cols.remove <- c('default.dataset', 'other.datasets')
+  # if (any(cols.remove %in% colnames(x = avail.pkgs))) {
+  #   ds.index <- which(x = colnames(x = avail.pkgs) %in% cols.remove)
+  #   avail.pkgs <- avail.pkgs[, -ds.index]
+  # }
   pkg.env$manifest <- avail.pkgs
   # Cache the manifest
   if (getOption(x = 'SeuratData.manifest.cache', default = FALSE)) {
