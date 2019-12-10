@@ -122,9 +122,9 @@ InstalledData <- function() {
 #'
 # @inheritParams LoadH5Seurat
 #' @param ds Optional name of dataset to load
-#' @param type How to load the \code{Seurat} object; choose from either 'default'
-#' for the default dataset or any dataset listed in the \code{default.dataset}
-#' or \code{other.datasets} sections of the data manifest
+#' @param type How to load the \code{Seurat} object; choose from either
+#' 'default' for the default dataset or any dataset listed in the
+#' \code{other.datasets} section of the data manifest
 # \describe{
 #   \item{info}{Information about the object and what's stored in it}
 #   \item{raw}{The raw form of the dataset, no other options are evaluated}
@@ -153,20 +153,16 @@ LoadData <- function(
     stop("Cannot find dataset ", ds, call. = FALSE)
   }
   ds <- NameToPackage(ds = ds)
-  datasets <- trimws(x = unlist(x = strsplit(
-    x = na.omit(object = unlist(
-      x = installed[ds, c('default.dataset', 'other.datasets')],
-      use.names = FALSE
-    )),
-    split = ','
-  )))
+  datasets <- c(
+    installed[ds, 'default.dataset', drop = TRUE],
+    trimws(x = unlist(x = strsplit(
+      x = installed[ds, 'other.datasets', drop = TRUE], split = ','
+    )))
+  )
   type <- match.arg(
     arg = tolower(x = type),
     choices = c('raw', 'default', datasets)
   )
-  if (type %in% c('raw', 'default')) {
-    type <- datasets[1]
-  }
   if (type %in% c('raw', 'default')) {
     type <- gsub(pattern = pkg.key, replacement = '', x = ds)
   } else if (type == 'final') {
@@ -179,6 +175,12 @@ LoadData <- function(
     # data(list = ds, envir = e)
     return(e[[type]])
   }
+  stop(
+    "Could not find dataset '",
+    type,
+    "', please check manifest and try again",
+    call. = FALSE
+  )
   .NotYetImplemented()
   # type <- match.arg(arg = type, choices = c('info', 'processed'))
   # return(LoadH5Seurat(

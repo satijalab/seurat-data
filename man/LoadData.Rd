@@ -9,9 +9,9 @@ LoadData(ds, type = "default")
 \arguments{
 \item{ds}{Optional name of dataset to load}
 
-\item{type}{How to load the \code{Seurat} object; choose from either 'default'
-for the default dataset or any dataset listed in the \code{default.dataset}
-or \code{other.datasets} sections of the data manifest}
+\item{type}{How to load the \code{Seurat} object; choose from either
+'default' for the default dataset or any dataset listed in the
+\code{other.datasets} section of the data manifest}
 }
 \value{
 A \code{Seurat} object with the dataset asked for
