@@ -40,12 +40,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Paul Hoffman \email{phoffman@nygenome.org} (0000-0002-7693-8957)
+\strong{Maintainer}: Paul Hoffman \email{phoffman@nygenome.org} (\href{https://orcid.org/0000-0002-7693-8957}{ORCID})
 
 Authors:
 \itemize{
-  \item Rahul Satija \email{rsatija@nygenome.org} (0000-0001-9448-8833)
-  \item Andrew Butler \email{abutler@nygenome.org} (0000-0003-3608-0463)
+  \item Rahul Satija \email{rsatija@nygenome.org} (\href{https://orcid.org/0000-0001-9448-8833}{ORCID})
+  \item Andrew Butler \email{abutler@nygenome.org} (\href{https://orcid.org/0000-0003-3608-0463}{ORCID})
 }
 
 }

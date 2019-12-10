@@ -12,7 +12,7 @@ UpdateData(ask = TRUE, lib.loc = NULL)
     string \code{"graphics"}, which brings up a widget to allow the user
     to (de-)select from the list of packages which could be updated.
     (The latter value only works on systems with a GUI version of
-    \code{\link{select.list}}, and is otherwise equivalent to
+    \code{\link[utils]{select.list}}, and is otherwise equivalent to
     \code{ask = TRUE}.)
   }
 
