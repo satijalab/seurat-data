@@ -4,15 +4,20 @@ NULL
 
 #' Get list of available datasets
 #'
-#' @return A dataframe with available Seurat datasets. Rownames of the dataframe are the actual package names
+#' @return A dataframe with available Seurat datasets. Rownames of the dataframe
+#' are the actual package names
 #' \describe{
-#'   \item{Dataset}{Name of dataset, usable for other functions in SeuratData (eg. \code{\link{InstallData}})}
-#'   \item{Version}{Version of dataset, generally corresponds to version of Seurat dataset was built with}
+#'   \item{Dataset}{Name of dataset, usable for other functions in SeuratData
+#'   (eg. \code{\link{InstallData}})}
+#'   \item{Version}{Version of dataset, generally corresponds to version of
+#'   Seurat dataset was built with}
 #'   \item{Installed}{Is the dataset installed?}
-#'   \item{InstalledVersion}{Version of dataset installed, \code{NA} if not installed}
+#'   \item{InstalledVersion}{Version of dataset installed, \code{NA}
+#'   if not installed}
 #' }
 #'
-#' Other columns are extra metadata, and may change as new datasets are made available
+#' Other columns are extra metadata, and may change as new datasets
+#' are made available
 #'
 #' @export
 #'
@@ -25,6 +30,46 @@ NULL
 AvailableData <- function() {
   UpdateManifest()
   return(pkg.env$manifest)
+}
+
+#' Get citation information for a dataset
+#'
+#' @inheritParams utils::citation
+#' @param ds Name of dataset to get citation information for
+#'
+#' @return An object of class \code{citation}, inheriting from class
+#' \code{\link[utils]{bibentry}}; see \code{\link[utils]{citation}} for more
+#' details
+#'
+#' @importFrom utils citation
+#'
+#' @export
+#'
+#' @seealso \code{\link[utils]{citation}}
+#'
+#' @examples
+#' \dontrun{
+#' CiteData('cbmc')
+#' }
+#'
+CiteData <- function(ds, lib.loc = NULL) {
+  pkg <- NameToPackage(ds = ds[1])
+  return(tryCatch(
+    expr = suppressWarnings(expr = citation(
+      package = pkg,
+      lib.loc = lib.loc,
+      auto = FALSE
+    )),
+    error = function(...) {
+      warning(
+        "No citation information found for ",
+        pkg,
+        call. = FALSE,
+        immediate. = TRUE
+      )
+      return(invisible(x = NULL))
+    }
+  ))
 }
 
 #' Install a dataset
@@ -95,15 +140,19 @@ InstallData <- function(ds, force.reinstall = FALSE, ...) {
 
 #' Get a list of installed datasets
 #'
-#' @return A dataframe with installed Seurat datasets. Rownames of the dataframe are the actual package names
+#' @return A dataframe with installed Seurat datasets. Rownames of the dataframe
+#' are the actual package names
 #' \describe{
-#'   \item{Dataset}{Name of dataset, usable for other functions in SeuratData (eg. \code{\link{InstallData}})}
-#'   \item{Version}{Version of dataset, generally corresponds to version of Seurat dataset was built with}
+#'   \item{Dataset}{Name of dataset, usable for other functions in SeuratData
+#'   (eg. \code{\link{InstallData}})}
+#'   \item{Version}{Version of dataset, generally corresponds to version of
+#'   Seurat dataset was built with}
 #'   \item{Installed}{Is the dataset installed?}
 #'   \item{InstalledVersion}{Version of dataset installed}
 #' }
 #'
-#' Other columns are extra metadata, and may change as new datasets are made available
+#' Other columns are extra metadata, and may change as new datasets
+#' are made available
 #'
 #' @export
 #'
@@ -120,18 +169,12 @@ InstalledData <- function() {
 
 #' Modularly load a dataset
 #'
-# @inheritParams LoadH5Seurat
+#' @inheritParams SeuratDisk::LoadH5Seurat
 #' @param ds Optional name of dataset to load
 #' @param type How to load the \code{Seurat} object; choose from either
 #' 'default' for the default dataset or any dataset listed in the
-#' \code{other.datasets} section of the data manifest
-# \describe{
-#   \item{info}{Information about the object and what's stored in it}
-#   \item{raw}{The raw form of the dataset, no other options are evaluated}
-#   \item{processed}{The proccessed data, modular loading avaible by setting other parameters}
-# }
+#' \code{other.datasets} or \code{disk.datasets} sections of the data manifest
 #'
-# @inherit LoadH5Seurat return
 #' @return A \code{Seurat} object with the dataset asked for
 #'
 #' @importFrom utils data
@@ -142,11 +185,16 @@ InstalledData <- function() {
 #'
 LoadData <- function(
   ds,
-  type = 'default'
-  # assays = NULL,
-  # reductions = NULL,
-  # graphs = NULL,
-  # verbose = TRUE
+  type = 'default',
+  assays = NULL,
+  reductions = NULL,
+  graphs = NULL,
+  images = NULL,
+  meta.data = TRUE,
+  commands = TRUE,
+  misc = is.null(x = assays),
+  tools = is.null(x = assays),
+  verbose = TRUE
 ) {
   installed <- InstalledData()
   if (!NameToPackage(ds = ds) %in% rownames(x = installed)) {
@@ -157,6 +205,9 @@ LoadData <- function(
     installed[ds, 'default.dataset', drop = TRUE],
     trimws(x = unlist(x = strsplit(
       x = installed[ds, 'other.datasets', drop = TRUE], split = ','
+    ))),
+    trimws(x = unlist(x = strsplit(
+      x = installed[ds, 'disk.datasets', drop = TRUE], split = ','
     )))
   )
   type <- match.arg(
@@ -171,10 +222,27 @@ LoadData <- function(
   if (type %in% data(package = ds)$results[, 'Item', drop = TRUE]) {
     e <- new.env()
     data(list = type, package = ds, envir = e)
-    # ds <- gsub(pattern = '\\.SeuratData', replacement = '', x = ds)
-    # data(list = ds, envir = e)
     return(e[[type]])
   }
+  if (!requireNamespace("SeuratDisk", quietly = TRUE)) {
+    stop()
+  }
+  return(SeuratDisk::LoadH5Seurat(
+    file = system.file(
+      file.path('extdata', 'objects', paste0(type, '.h5Seurat')),
+      package = ds,
+      mustWork = TRUE
+    ),
+    assays = assays,
+    reductions = reductions,
+    graphs = graphs,
+    images = images,
+    meta.data = meta.data,
+    commands = commands,
+    misc = misc,
+    tools = tools,
+    verbose = verbose
+  ))
   stop(
     "Could not find dataset '",
     type,

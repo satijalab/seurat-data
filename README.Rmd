@@ -1,0 +1,92 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# SeuratData v`r packageVersion("SeuratData")`
+
+<!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/SeuratData)](https://CRAN.R-project.org/package=SeuratData)
+<!-- badges: end -->
+
+SeuratData is a mechanism for distributing datasets in the form of [Seurat](https://satijalab.org/seurat) objects using R's internal package and data management systems.
+It represents an easy way for users to get access to datasets that are used in the Seurat vignettes.
+
+## Installation
+
+SeuratData is not currently available on CRAN. You can install it from GitHub with:
+
+```{r install, eval=FALSE}
+if (!requireNamespace("remotes", quietly = FALSE)) {
+  install.packages("remotes")
+}
+remotes::install_github("satijalab/seurat-disk")
+```
+
+## Getting Started
+
+When loading SeuratData, a list of all available datasets will be displayed (this is similar to other metapackages like [tidyverse](https://cran.r-project.org/package=tidyverse) along with the version of [Seurat](https://satijalab.org/seurat/) used to create each dataset.
+This message can be suppressed with [`suppressPackageStartupMessages`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/message.html)
+
+```{r load}
+library(SeuratData)
+```
+
+To see a manifest of all available datasets, use `AvailableData`; this manifest will update as new datasets are uploaded to our data repository.
+
+```{r manifest}
+AvailableData()
+```
+
+Installation of datasets can be done with `InstallData`; this function will accept either a dataset name (eg. `pbmc3k`) or the corresponding package name (eg. `pbmc3k.SeuratData`).
+`InstallData` will automatically attach the installed dataset package so one can immediately load and use the dataset.
+
+```{r ds_install, eval=FALSE}
+InstallData("pbmc3k")
+```
+
+Loading a dataset is done using the [`data`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/data.html) function
+
+```{r load_data}
+data("pbmc3k")
+pbmc3k
+```
+
+## Dataset documentation and information
+
+All datasets provided have help pages built for them. These pages are accessed using the standard [`help`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/help.html) function
+
+```{r data_help, eval=FALSE}
+?pbmc3k
+?ifnb
+```
+
+A full command list for the steps taken to generate each dataset is present in the examples section of these help pages.
+
+Packages will also often have citation information bundled with the package.
+Citation information can be accessed with `CiteData`
+
+```{r citation}
+CiteData("cbmc")
+```
+
+## Rationale and Implementation
+
+We created SeuratData in order to distribute datasets for [Seurat](https://satijalab.org/seurat/get_started.html) [vignettes](https://satijalab.org/seurat/frv.html) in as painless and reproducible a way as possible.
+We also wanted to give users the flexibility to selectively install and load datasets of interest, to minimize disk storage and memory use.
+
+To accomplish this, we opted to distribute datasets through individual R packages.
+Under the hood, SeuratData uses and extends standard R functions, such as [`install.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/install.packages.html) for dataset installation, [`available.packages`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/available.packages.html) for dataset listing, [`citation`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/citation.html) for dataset citation, and [`data`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/data.html) for dataset loading. 
+
+SeuratData therefore serves as a more specific package manager (similar to a metapackage) for R.
+We provide wrappers around R's package management functions, [extend them to provide relevant metadata](https://github.com/satijalab/seurat-data/#getting-started) about each dataset, and set default settings (for example, the repository where data is stored) to facilitate easy installation.

@@ -1,9 +1,13 @@
+#' @importFrom rlang %||%
+#'
+NULL
+
 #' Install and manage Seurat datasets
 #'
 #' @section Package options:
 #'
-#' SeuratData uses the following options to control behaviour, users can configure
-#' these with \code{\link[base]{options}}:
+#' SeuratData uses the following options to control behaviour, users can
+#' configure these with \code{\link[base]{options}}:
 #'
 #' \itemize{
 #'   \item `SeuratData.repo.use`: Set the location where the SeuratData datasets
@@ -12,9 +16,10 @@
 #'   to the data repository; note, setting to \code{FALSE} will simply prevent
 #'   SeuratData from caching the manifest, not from reading a previously cached
 #'   manifest
-#'   \item `SeuratData.roaming`: For Windows users, use a roaming profile directory
-#'   for domain users. See \url{https://en.wikipedia.org/wiki/Roaming_user_profile}
-#'   for a brief overview and Microsoft's documentation for greater detail
+#'   \item `SeuratData.roaming`: For Windows users, use a roaming profile
+#'   directory for domain users. See
+#'   \url{https://en.wikipedia.org/wiki/Roaming_user_profile} for a brief
+#'   overview and Microsoft's documentation for greater detail
 #' }
 #'
 #' @docType package
@@ -34,7 +39,8 @@ default.options <- list(
   SeuratData.roaming = FALSE
 )
 
-pkg.key <- '\\.SeuratData$'
+pkg.ext <- '.SeuratData'
+pkg.key <- paste0('\\', pkg.ext, '$')
 
 pkg.env <- new.env()
 pkg.env$manifest <- vector(mode = 'list')
@@ -46,34 +52,6 @@ pkg.env$extdata.warn <- FALSE
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Internal functions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-#' Set a default value if an object is null
-#'
-#' @param lhs An object to set if it's null
-#' @param rhs The value to provide if x is null
-#'
-#' @return rhs if lhs is null, else lhs
-#'
-#' @name set-if-null
-#'
-#' @author Hadley Wickham
-#' @references \url{https://adv-r.hadley.nz/functions.html#missing-arguments}
-#'
-#' @examples
-#' \dontrun{
-#' 4 %||% 5
-#' NULL %|| 5
-#' }
-#'
-#' @keywords internal
-#'
-`%||%` <- function(lhs, rhs) {
-  if (!is.null(x = lhs)) {
-    return(lhs)
-  } else {
-    return(rhs)
-  }
-}
 
 #' Get an application data directory
 #'
@@ -112,7 +90,7 @@ AppData <- function(pkgname = 'SeuratData', author = pkgname) {
 #'
 AttachData <- function(pkgname = 'SeuratData') {
   installed <- InstalledData()
-  installed <- installed[!paste0('package:', rownames(x = installed)) %in% search(), , drop = FALSE]
+  installed <- installed[!paste0('package:', NameToPackage(ds = rownames(x = installed))) %in% search(), , drop = FALSE]
   installed <- installed[grep(pattern = 'NA', x = rownames(x = installed), invert = TRUE), ]
   if (nrow(x = installed) < 1) {
     return(invisible(x = NULL))
@@ -123,6 +101,10 @@ AttachData <- function(pkgname = 'SeuratData') {
       return(NA)
     }
   )
+  if (!is.na(x = seurat.version) && !'package:Seurat' %in% search()) {
+    packageStartupMessage("Attaching Seurat")
+    suppressPackageStartupMessages(expr = attachNamespace('Seurat'))
+  }
   header <- rule(
     left = bold('Installed datasets'),
     right = paste0(pkgname, ' v', packageVersion(pkg = pkgname))
@@ -130,13 +112,17 @@ AttachData <- function(pkgname = 'SeuratData') {
   symbols <- if (is.na(x = seurat.version)) {
     red(symbol$fancy_question_mark)
   } else {
-    c(green(symbol$tick), yellow(symbol$pointer))[(installed$InstalledVersion > seurat.version) + 1]
+    c(green(symbol$tick), yellow(symbol$pointer))[(installed$SeuratBuild > seurat.version) + 1]
   }
+  symbols[which(x = is.na(x = symbols))] <- red(bold(symbol$cross))
   packageStartupMessage(header)
   pkgs <- paste(
     symbols,
-    blue(format(x = installed$Dataset)),
-    col_align(text = installed$InstalledVersion, width = max(col_nchar(x = installed$InstalledVersion)))
+    blue(format(x = rownames(x = installed))),
+    col_align(
+      text = installed$InstalledVersion,
+      width = max(col_nchar(x = installed$InstalledVersion))
+    )
   )
   if (length(x = pkgs) %% 2 == 1) {
     pkgs <- c(pkgs, '')
@@ -156,24 +142,36 @@ AttachData <- function(pkgname = 'SeuratData') {
   info <- paste0(pkgs[col.1], space, pkgs[-col.1])
   packageStartupMessage(paste(info, collapse = '\n'), '\n')
   packageStartupMessage(rule(center = 'Key'))
-  packageStartupMessage(
-    paste(
-      c(green(symbol$tick), yellow(symbol$pointer), red(symbol$fancy_question_mark)),
-      c(
-        'Dataset loaded successfully',
-        'Dataset built with a newer version of Seurat than installed',
-        'Unknown version of Seurat installed'
+  if (is.na(x = seurat.version)) {
+    packageStartupMessage(
+      red(symbol$fancy_question_mark),
+      'Unknown version of Seurat installed',
+      '\n'
+    )
+  } else {
+    packageStartupMessage(
+      paste(
+        c(
+          green(symbol$tick),
+          yellow(symbol$pointer),
+          red(bold(symbol$cross))
+        ),
+        c(
+          'Dataset built with compatible version of Seurat',
+          'Dataset built with a newer version of Seurat than installed',
+          'Unknown version of Seurat dataset was built with'
+        ),
+        collapse = '\n'
       ),
-      collapse = '\n'
-    ),
-    '\n'
-  )
+      '\n'
+    )
+  }
   suppressPackageStartupMessages(expr = lapply(
-    X = rownames(x = installed),
+    X = NameToPackage(ds = rownames(x = installed)),
     FUN = attachNamespace
   ))
-  pkg.env$attached <- rownames(x = installed)
-  invisible(x = NULL)
+  pkg.env$attached <- NameToPackage(ds = rownames(x = installed))
+  return(invisible(x = NULL))
 }
 
 #' Enumerate a list or vector
@@ -204,6 +202,38 @@ Enumerate <- function(x) {
     }
   )
   return(vals)
+}
+
+#' Get package datasets
+#'
+#' @param ds Name of a dataset or package to get data for
+#' @param type Type of data to search for; choose from:
+#' \describe{
+#' \item{memory}{Datasets loaded in memory via \code{\link[utils]{data}}}
+#' \item{disk}{Datasets loaded from disk via \code{\link[SeuratDisk]{LoadH5Seurat}}}
+#' }
+#' @inheritDotParams NameToPackage
+#'
+#' @return A character vector of all datasets present in \code{ds}
+#'
+#' @importFrom utils data
+#'
+#' @keywords internal
+#'
+#' @seealso \code{\link[utils]{data}}
+#'
+GetPackageData <- function(ds, type = c('memory', 'disk'), ...) {
+  type <- match.arg(type)
+  ds <- NameToPackage(ds = ds, ...)
+  return(switch(
+    EXPR = type,
+    'memory' = data(package = ds)$results[, 'Item', drop = TRUE],
+    'disk' = list.files(
+      path = system.file('extdata', 'objects', package = ds),
+      pattern = '\\.h5seurat$',
+      ignore.case = TRUE
+    )
+  ))
 }
 
 #' Check to see if a matrix is empty
@@ -271,9 +301,12 @@ MakeSpace <- function(n) {
 #'
 #' @keywords internal
 #'
-NameToPackage <- function(ds) {
-  avail.pkgs <- AvailableData()
-  ds.use <- ds %in% c(rownames(x = avail.pkgs), avail.pkgs$Dataset)
+NameToPackage <- function(ds, manifest = NULL) {
+  avail.pkgs <- manifest %||% AvailableData()
+  ds.use <- ds %in% c(
+    rownames(x = avail.pkgs),
+    paste0(rownames(x = avail.pkgs), pkg.ext)
+  )
   if (sum(x = ds.use) != length(x = ds)) {
     warning(
       "The following datasets are not available: ",
@@ -283,9 +316,8 @@ NameToPackage <- function(ds) {
     )
   }
   ds <- ds[ds.use]
-  ds.replace <- which(x = ds %in% avail.pkgs$Dataset)
-  pkg.replace <- which(x = avail.pkgs$Dataset %in% ds[ds.replace])
-  ds[ds.replace] <- rownames(x = avail.pkgs)[pkg.replace]
+  ds.replace <- which(x = ds %in% rownames(x = avail.pkgs))
+  ds[ds.replace] <- paste0(ds[ds.replace], pkg.ext)
   if (length(x = ds) < 1) {
     stop("No SeuratData datasets provided", call. = FALSE)
   }
@@ -296,11 +328,13 @@ NameToPackage <- function(ds) {
 #'
 #' @return Nothing, updates the manifest in the package environment
 #'
+#' @importFrom tools file_path_sans_ext
 #' @importFrom utils available.packages packageVersion
 #'
 #' @keywords internal
 #'
 UpdateManifest <- function() {
+  # browser()
   # Set some defaults
   pkg.env$source <- 'remote'
   cache.manifest <- file.path(
@@ -393,10 +427,46 @@ UpdateManifest <- function() {
       }
     }
     # Convert each entry to a dataframe and bind everything together
-    avail.pkgs <- lapply(X = avail.pkgs, FUN = as.data.frame, stringsAsFactors = FALSE)
+    avail.pkgs <- lapply(
+      X = avail.pkgs,
+      FUN = as.data.frame,
+      stringsAsFactors = FALSE
+    )
     avail.pkgs <- do.call(what = 'rbind', args = avail.pkgs)
+    # Some modifications to the manifest
+    rownames(x = avail.pkgs) <- avail.pkgs$Dataset
+    new.names <- c(
+      'SeuratBuild' = 'seurat',
+      'DefaultDS' = 'default.dataset',
+      'OtherDS' = 'other.datasets',
+      'DiskDS' = 'disk.datasets'
+    )
+    for (i in seq_along(along.with = new.names)) {
+      index <- which(x = colnames(x = avail.pkgs) == new.names[i])
+      if (length(x = index)) {
+        colnames(x = avail.pkgs)[index] <- names(x = new.names)[i]
+      }
+    }
+    cols.delete <- which(x = colnames(x = avail.pkgs) == 'Dataset')
+    if (length(x = cols.delete)) {
+      avail.pkgs <- avail.pkgs[, -cols.delete, drop = FALSE]
+    }
     # Coerce version information to package_version
     avail.pkgs$Version <- package_version(x = avail.pkgs$Version)
+    avail.pkgs$SeuratBuild <- package_version(
+      x = avail.pkgs$SeuratBuild,
+      strict = FALSE
+    )
+    # Set column order
+    cols <- c(
+      'Version',
+      'SeuratBuild',
+      'DefaultDS',
+      'OtherDS',
+      'DiskDS',
+      'Summary'
+    )
+    avail.pkgs <- avail.pkgs[, c(cols, setdiff(x = colnames(x = avail.pkgs), y = cols))]
   } else if (pkg.env$source == 'appdir') {
     # Read cached manifest
     pkg.env$extdata.warn <- FALSE
@@ -425,13 +495,13 @@ UpdateManifest <- function() {
   }
   # Get dataset installation status
   avail.pkgs$Installed <- vapply(
-    X = rownames(x = avail.pkgs),
+    X = NameToPackage(ds = rownames(x = avail.pkgs), manifest = avail.pkgs),
     FUN = requireNamespace,
     FUN.VALUE = logical(length = 1L),
     quietly = TRUE
   )
   avail.pkgs$InstalledVersion <- sapply(
-    X = rownames(x = avail.pkgs),
+    X = NameToPackage(ds = rownames(x = avail.pkgs), manifest = avail.pkgs),
     FUN = function(x) {
       pkg.version <- tryCatch(
         expr = packageVersion(pkg = x),
@@ -448,12 +518,59 @@ UpdateManifest <- function() {
     x = avail.pkgs$InstalledVersion,
     strict = FALSE
   )
-  # # TODO: remove these when we allow loading of processed datasets
-  # cols.remove <- c('default.dataset', 'other.datasets')
-  # if (any(cols.remove %in% colnames(x = avail.pkgs))) {
-  #   ds.index <- which(x = colnames(x = avail.pkgs) %in% cols.remove)
-  #   avail.pkgs <- avail.pkgs[, -ds.index]
-  # }
+  # Check dataset information
+  avail.pkgs$DefaultDS <- vapply(
+    X = rownames(x = avail.pkgs),
+    FUN = function(x) {
+      return(ifelse(
+        test = avail.pkgs[x, 'Installed', drop = TRUE],
+        yes = ifelse(
+          test = x %in% GetPackageData(ds = x, manifest = avail.pkgs),
+          yes = x,
+          no = NA_character_
+        ),
+        no = paste0(avail.pkgs[x, 'DefaultDS', drop = TRUE], '*')
+      ))
+    },
+    FUN.VALUE = character(length = 1L)
+  )
+  avail.pkgs$OtherDS <- vapply(
+    X = rownames(x = avail.pkgs),
+    FUN = function(x) {
+      return(ifelse(
+        test = avail.pkgs[x, 'Installed', drop = TRUE],
+        yes = {
+          other <- setdiff(
+            x = GetPackageData(ds = x, manifest = avail.pkgs),
+            y = x
+          )
+          other <- if (length(x = other)) {
+            paste(other, collapse = ', ')
+          } else {
+            NA_character_
+          }
+          other
+        },
+        no = paste0(avail.pkgs[x, 'OtherDS', drop = TRUE], '*')
+      ))
+    },
+    FUN.VALUE = character(length = 1L)
+  )
+  avail.pkgs$DiskDS <- vapply(
+    X = rownames(x = avail.pkgs),
+    FUN = function(x) {
+      return(ifelse(
+        test = avail.pkgs[x, 'Installed', drop = FALSE],
+        yes = file_path_sans_ext(x = GetPackageData(
+          ds = x,
+          type = 'disk',
+          manifest = avail.pkgs
+        )),
+        no = paste0(avail.pkgs[x, 'DiskDS', drop = TRUE], '*')
+      ))
+    },
+    FUN.VALUE = character(length = 1L)
+  )
   pkg.env$manifest <- avail.pkgs
   # Cache the manifest
   if (getOption(x = 'SeuratData.manifest.cache', default = FALSE)) {

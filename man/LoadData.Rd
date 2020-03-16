@@ -4,14 +4,75 @@
 \alias{LoadData}
 \title{Modularly load a dataset}
 \usage{
-LoadData(ds, type = "default")
+LoadData(
+  ds,
+  type = "default",
+  assays = NULL,
+  reductions = NULL,
+  graphs = NULL,
+  images = NULL,
+  meta.data = TRUE,
+  commands = TRUE,
+  misc = is.null(x = assays),
+  tools = is.null(x = assays),
+  verbose = TRUE
+)
 }
 \arguments{
 \item{ds}{Optional name of dataset to load}
 
 \item{type}{How to load the \code{Seurat} object; choose from either
 'default' for the default dataset or any dataset listed in the
-\code{other.datasets} section of the data manifest}
+\code{other.datasets} or \code{disk.datasets} sections of the data manifest}
+
+\item{assays}{One of:
+\itemize{
+ \item A character vector with names of assays
+ \item A character vector with one or more of \code{counts}, \code{data},
+ \code{scale.data} describing which slots of \strong{all assays} to load
+ \item A named list where each entry is either the name of an assay or a vector
+ describing which slots (described above) to take from which assay
+ \item \code{NULL} for all assays
+}}
+
+\item{reductions}{One of:
+\itemize{
+ \item A character vector with names of reductions
+ \item \code{NULL} for all reductions
+ \item \code{NA} for \link[Seurat:IsGlobal]{global} reductions
+ \item \code{FALSE} for no reductions
+}
+\strong{Note}: Only reductions associated with an assay loaded in
+\code{assays} or marked as \link[Seurat:IsGlobal]{global} will be loaded}
+
+\item{graphs}{One of:
+\itemize{
+ \item A character vector with names of graphs
+ \item \code{NULL} for all graphs
+ \item \code{FALSE} for no graphs
+}
+\strong{Note}: Only graphs associated with an assay loaded in \code{assays}
+will be loaded}
+
+\item{images}{One of:
+\itemize{
+ \item A character vector with names of images
+ \item \code{NULL} for all images
+ \item \code{NA} for \link[Seurat:IsGlobal]{global} images
+ \item \code{FALSE} for no images
+}}
+
+\item{meta.data}{Load object metadata}
+
+\item{commands}{Load command information \cr
+\strong{Note}: only commands associated with an assay loaded in
+\code{assays} will be loaded}
+
+\item{misc}{Load miscellaneous data}
+
+\item{tools}{Load tool-specific information}
+
+\item{verbose}{Show progress updates}
 }
 \value{
 A \code{Seurat} object with the dataset asked for

@@ -4,7 +4,7 @@
 \alias{NameToPackage}
 \title{Find dataset packages based on name}
 \usage{
-NameToPackage(ds)
+NameToPackage(ds, manifest = NULL)
 }
 \arguments{
 \item{ds}{Names of datasets}

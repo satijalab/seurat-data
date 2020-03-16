@@ -14,8 +14,8 @@ Single cell RNA sequencing datasets can be large, consisting of matrices
 \section{Package options}{
 
 
-SeuratData uses the following options to control behaviour, users can configure
-these with \code{\link[base]{options}}:
+SeuratData uses the following options to control behaviour, users can
+configure these with \code{\link[base]{options}}:
 
 \itemize{
   \item `SeuratData.repo.use`: Set the location where the SeuratData datasets
@@ -24,9 +24,10 @@ these with \code{\link[base]{options}}:
   to the data repository; note, setting to \code{FALSE} will simply prevent
   SeuratData from caching the manifest, not from reading a previously cached
   manifest
-  \item `SeuratData.roaming`: For Windows users, use a roaming profile directory
-  for domain users. See \url{https://en.wikipedia.org/wiki/Roaming_user_profile}
-  for a brief overview and Microsoft's documentation for greater detail
+  \item `SeuratData.roaming`: For Windows users, use a roaming profile
+  directory for domain users. See
+  \url{https://en.wikipedia.org/wiki/Roaming_user_profile} for a brief
+  overview and Microsoft's documentation for greater detail
 }
 }
 
