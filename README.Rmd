@@ -13,10 +13,23 @@ knitr::opts_chunk$set(
 )
 ```
 
-# SeuratData v`r packageVersion("SeuratData")`
+```{r version, echo=FALSE}
+pkg.version <- packageVersion("SeuratData")
+stage <- if (pkg.version >= package_version(x = "1.0.0")) {
+  "stable"
+} else if (pkg.version >= package_version(x = "0.1.0")) {
+  "maturing"
+} else {
+  "experimental"
+}
+color <- c("experimental" = "orange", "maturing" = "blue", "stable" = "brightgreen")[stage]
+```
+
+# SeuratData v`r pkg.version`
 
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/SeuratData)](https://CRAN.R-project.org/package=SeuratData)
+[![Lifecycle](https://img.shields.io/badge/lifecycle-`r stage`-`r color`.svg)](https://github.com/satijalab/seurat-data)
 <!-- badges: end -->
 
 SeuratData is a mechanism for distributing datasets in the form of [Seurat](https://satijalab.org/seurat) objects using R's internal package and data management systems.
@@ -68,7 +81,6 @@ All datasets provided have help pages built for them. These pages are accessed u
 
 ```{r data_help, eval=FALSE}
 ?pbmc3k
-?ifnb
 ```
 
 A full command list for the steps taken to generate each dataset is present in the examples section of these help pages.

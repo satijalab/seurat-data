@@ -445,6 +445,8 @@ UpdateManifest <- function() {
       index <- which(x = colnames(x = avail.pkgs) == new.names[i])
       if (length(x = index)) {
         colnames(x = avail.pkgs)[index] <- names(x = new.names)[i]
+      } else {
+        avail.pkgs[[names(x = new.names)[i]]] <- NA_character_
       }
     }
     cols.delete <- which(x = colnames(x = avail.pkgs) == 'Dataset')
