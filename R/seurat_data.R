@@ -53,7 +53,8 @@ AvailableData <- function() {
 #' }
 #'
 CiteData <- function(ds, lib.loc = NULL) {
-  pkg <- NameToPackage(ds = ds[1])
+  ds <- ds[1]
+  pkg <- NameToPackage(ds = ds)
   return(tryCatch(
     expr = suppressWarnings(expr = citation(
       package = pkg,
@@ -63,7 +64,7 @@ CiteData <- function(ds, lib.loc = NULL) {
     error = function(...) {
       warning(
         "No citation information found for ",
-        pkg,
+        ds,
         call. = FALSE,
         immediate. = TRUE
       )
@@ -102,7 +103,10 @@ InstallData <- function(ds, force.reinstall = FALSE, ...) {
   }
   pkgs <- NameToPackage(ds = ds)
   if (!force.reinstall) {
-    installed <- intersect(x = pkgs, y = rownames(x = InstalledData()))
+    installed <- intersect(
+      x = pkgs,
+      y = NameToPackage(ds = rownames(x = InstalledData()))
+    )
     if (length(x = installed) > 0) {
       warning(
         "The following packages are already installed and will not be reinstalled: ",
@@ -197,21 +201,24 @@ LoadData <- function(
   verbose = TRUE
 ) {
   installed <- InstalledData()
+  rownames(x = installed) <- NameToPackage(ds = rownames(x = installed))
   if (!NameToPackage(ds = ds) %in% rownames(x = installed)) {
     stop("Cannot find dataset ", ds, call. = FALSE)
   }
   ds <- NameToPackage(ds = ds)
   datasets <- c(
-    installed[ds, 'default.dataset', drop = TRUE],
+    installed[ds, 'DefaultDS', drop = TRUE],
     trimws(x = unlist(x = strsplit(
-      x = installed[ds, 'other.datasets', drop = TRUE], split = ','
+      x = installed[ds, 'OtherDS', drop = TRUE],
+      split = ','
     ))),
     trimws(x = unlist(x = strsplit(
-      x = installed[ds, 'disk.datasets', drop = TRUE], split = ','
+      x = installed[ds, 'DiskDS', drop = TRUE],
+      split = ','
     )))
   )
   type <- match.arg(
-    arg = tolower(x = type),
+    arg = type,
     choices = c('raw', 'default', datasets)
   )
   if (type %in% c('raw', 'default')) {
@@ -225,7 +232,7 @@ LoadData <- function(
     return(e[[type]])
   }
   if (!requireNamespace("SeuratDisk", quietly = TRUE)) {
-    stop()
+    stop("Loading a disk-based dataset requires SeuratDisk", call. = FALSE)
   }
   return(SeuratDisk::LoadH5Seurat(
     file = system.file(
