@@ -12,7 +12,7 @@ devtools::install_github('satijalab/seurat-data')
 
 ### Getting Started
 
-When loading SeuratData, a list of all available datasets will be displayed (this is similar to other metapackages like [tidyverse](https://cran.r-project.org/package=tidyverse) along with the version of [Seurat](https://satijalab.org/seurat/) used to create each dataset. This message can be suppressed with [`suppressPackageStartupMessages`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/message.html)
+When loading SeuratData, a list of all available datasets will be displayed (this is similar to other metapackages like [tidyverse](https://cran.r-project.org/package=tidyverse) along with the version of [Seurat](https://satijalab.org/seurat/) used to create each dataset). This message can be suppressed with [`suppressPackageStartupMessages`](https://stat.ethz.ch/R-manual/R-devel/library/base/html/message.html)
 
 ```R
 > library(SeuratData)
