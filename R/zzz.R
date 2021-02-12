@@ -404,7 +404,11 @@ UpdateManifest <- function() {
       }
     }
     # Convert each entry to a dataframe and bind everything together
-    avail.pkgs <- as.data.frame(t(avail.pkgs))
+    # avail.pkgs <- as.data.frame(t(avail.pkgs))
+    avail.pkgs <- do.call(
+      what = "rbind",
+      args = sapply(X = avail.pkgs, FUN = as.data.frame, simplify = FALSE)
+    )
     # Coerce version information to package_version
     avail.pkgs$Version <- package_version(x = avail.pkgs$Version)
   } else if (pkg.env$source == 'appdir') {
@@ -479,7 +483,7 @@ UpdateManifest <- function() {
       saveRDS(object = pkg.env$manifest, file = cache.manifest)
     }
   }
-  invisible(x = NULL)
+  return(invisible(x = NULL))
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
