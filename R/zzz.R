@@ -344,41 +344,52 @@ UpdateManifest <- function() {
           x = pkg[['Package']]
         )
         # Process the description metadata
-        desc <- unlist(x = strsplit(x = pkg[['Description']], split = '\n'))
-        desc <- sapply(
-          X = strsplit(x = desc, split = ':'),
-          FUN = function(x) {
-            name <- trimws(x = x[[1]])
-            val <- trimws(x = unlist(x = strsplit(x = x[[2]], split = ',')))
-            val <- paste(val, collapse = ', ')
-            names(x = val) <- name
-            return(val)
-          }
-        )
-        desc <- sapply(
-          X = desc,
-          FUN = function(x) {
-            x <- tryCatch(
-              expr = as.numeric(x = x),
-              warning = function(...) {
-                return(x)
-              }
-            )
-            if (!is.numeric(x = x) && !is.na(x = as.logical(x = x))) {
-              x <- as.logical(x = x)
+        desc <- pkg[['Description']]
+        if (!is.na(desc)) {
+          desc <- unlist(x = strsplit(x = desc, split = '\n'))
+          desc <- sapply(
+            X = strsplit(x = desc, split = ':'),
+            FUN = function(x) {
+              name <- trimws(x = x[[1]])
+              val <- trimws(x = unlist(x = strsplit(x = x[[2]], split = ',')))
+              val <- paste(val, collapse = ', ')
+              names(x = val) <- name
+              return(val)
             }
-            return(x)
-          },
-          simplify = FALSE,
-          USE.NAMES = TRUE
-        )
+          )
+          desc <- sapply(
+            X = desc,
+            FUN = function(x) {
+              x <- tryCatch(
+                expr = as.numeric(x = x),
+                warning = function(...) {
+                  return(x)
+                }
+              )
+              if (!is.numeric(x = x) && !is.na(x = as.logical(x = x))) {
+                x <- as.logical(x = x)
+              }
+              return(x)
+            },
+            simplify = FALSE,
+            USE.NAMES = TRUE
+          )
+        }
         # Assemble the information
-        desc <- c(
-          'Dataset' = dataset,
-          'Version' = pkg[['Version']],
-          'Summary' = pkg[['Title']],
-          desc
-        )
+        if (is.na(desc)) {
+          desc <- c(
+            'Dataset' = dataset,
+            'Version' = pkg[['Version']],
+            'Summary' = pkg[['Title']]
+          )
+        } else {
+          desc <- c(
+            'Dataset' = dataset,
+            'Version' = pkg[['Version']],
+            'Summary' = pkg[['Title']],
+            desc
+          )
+        }
         return(desc)
       }
     )
@@ -393,8 +404,7 @@ UpdateManifest <- function() {
       }
     }
     # Convert each entry to a dataframe and bind everything together
-    avail.pkgs <- lapply(X = avail.pkgs, FUN = as.data.frame, stringsAsFactors = FALSE)
-    avail.pkgs <- do.call(what = 'rbind', args = avail.pkgs)
+    avail.pkgs <- as.data.frame(t(avail.pkgs))
     # Coerce version information to package_version
     avail.pkgs$Version <- package_version(x = avail.pkgs$Version)
   } else if (pkg.env$source == 'appdir') {
