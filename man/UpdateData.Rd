@@ -11,9 +11,11 @@ UpdateData(ask = TRUE, lib.loc = NULL)
     packages before they are downloaded and installed, or the character
     string \code{"graphics"}, which brings up a widget to allow the user
     to (de-)select from the list of packages which could be updated.
-    (The latter value only works on systems with a GUI version of
+    The latter value only works on systems with a GUI version of
     \code{\link[utils]{select.list}}, and is otherwise equivalent to
-    \code{ask = TRUE}.)
+    \code{ask = TRUE}. \code{ask} does not control questions asked before
+    installing packages from source via \code{type = "both"} (see option
+    \code{"install.packages.compile.from.source"}).
   }
 
 \item{lib.loc}{character vector describing the location of R

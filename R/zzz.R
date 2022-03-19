@@ -376,7 +376,7 @@ UpdateManifest <- function() {
           )
         }
         # Assemble the information
-        if (is.na(desc)) {
+        if (all(is.na(desc))) {
           desc <- c(
             'Dataset' = dataset,
             'Version' = pkg[['Version']],

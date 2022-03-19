@@ -6,10 +6,7 @@
 \alias{SeuratData-package}
 \title{Install and manage Seurat datasets}
 \description{
-Single cell RNA sequencing datasets can be large, consisting of matrices
-    that contain expression data for several thousand features across several thousand
-    cells. This package is designed to easily install, manage, and learn about various single-cell
-    datasets, provided Seurat objects and distributed as independent packages.
+Single cell RNA sequencing datasets can be large, consisting of matrices that contain expression data for several thousand features across several thousand cells. This package is designed to easily install, manage, and learn about various single-cell datasets, provided Seurat objects and distributed as independent packages.
 }
 \section{Package options}{
 
