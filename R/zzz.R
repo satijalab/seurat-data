@@ -29,7 +29,7 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 default.options <- list(
-  SeuratData.repo.use = 'http://seurat.nygenome.org/',
+  SeuratData.repo.use = 'http://seurat.nygenome.org/staging/',
   SeuratData.manifest.cache = TRUE,
   SeuratData.roaming = FALSE
 )

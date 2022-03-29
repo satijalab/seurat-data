@@ -161,9 +161,14 @@ LoadData <- function(
   )
   type <- match.arg(
     arg = tolower(x = type),
-    choices = c('raw', 'default', datasets)
+    choices = c('raw', 'default', 'azimuth', datasets)
   )
-  if (type %in% c('raw', 'default')) {
+  if (type == 'azimuth') {
+    library(Azimuth)
+    pkg.path <- find.package(ds)
+    ref <- Azimuth::LoadReference(paste0(pkg.path, '/', type))
+    return(ref)
+  } else if (type %in% c('raw', 'default')) {
     type <- gsub(pattern = pkg.key, replacement = '', x = ds)
   } else if (type == 'final') {
     type <- paste0(gsub(pattern = pkg.key, replacement = '', x = ds), '.final')
