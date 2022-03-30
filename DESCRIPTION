@@ -25,7 +25,8 @@ Imports:
     crayon,
     rappdirs,
     stats,
-    utils
+    utils,
+    Seurat
 Collate:
     'zzz.R'
     'seurat_data.R'

@@ -165,7 +165,7 @@ LoadData <- function(
     choices = c('raw', 'default', 'azimuth', datasets)
   )
   if (type == 'azimuth') {
-    return(Azimuth::LoadReference(file.path(system.file(package=ds), type)))
+    return(LoadReference(file.path(system.file(package=ds), type)))
   } else if (type %in% c('raw', 'default')) {
     type <- gsub(pattern = pkg.key, replacement = '', x = ds)
   } else if (type == 'final') {
@@ -257,4 +257,74 @@ UpdateData <- function(ask = TRUE, lib.loc = NULL) {
   update.packages(lib.loc = lib.loc, repos = getOption(x = "SeuratData.repo.use"), ask = ask, type = 'source')
   UpdateManifest()
   invisible(x = NULL)
+}
+
+#' Load the reference RDS files
+#'
+#' Read in a reference \code{\link[Seurat]{Seurat}} object and annoy index. This
+#' function can read from a file path. In order to read properly,
+#' there must be the following files:
+#' \itemize{
+#'  \item \dQuote{ref.Rds} for the downsampled reference \code{Seurat}
+#'  object (for mapping)
+#'  \item \dQuote{idx.annoy} for the nearest-neighbor index object
+#' }
+#'
+#' @param path Pathto the two RDS files
+#'
+#' @return A list with two entries:
+#' \describe{
+#'  \item{\code{map}}{
+#'   The downsampled reference \code{\link[Seurat]{Seurat}}
+#'   object (for mapping)
+#'  }
+#'  \item{\code{plot}}{The reference \code{Seurat} object (for plotting)}
+#' }
+#'
+#' @importFrom SeuratObject Idents<- Tool Cells Misc
+#' @importFrom Seurat LoadAnnoyIndex AddMetaData CreateSeuratObject
+#' @importFrom utils download.file
+#' @importFrom Matrix sparseMatrix
+#'
+LoadReference <- function(path) {
+  ref.names <- list(
+    map = 'ref.Rds',
+    ann = 'idx.annoy'
+  )
+
+  mapref <- file.path(path, ref.names$map)
+  annref <- file.path(path, ref.names$ann)
+  exists <- file.exists(c(mapref, annref))
+  if (!all(exists)) {
+    stop(
+      "Missing the following files from the directory provided: ",
+      unlist(x = ref.names)[!exists]
+    )
+  }
+  # Load the map reference
+  map <- readRDS(file = mapref)
+  # Load the annoy index into the Neighbor object in the neighbors slot
+  map[["refdr.annoy.neighbors"]] <- LoadAnnoyIndex(
+    object = map[["refdr.annoy.neighbors"]],
+    file = annref
+  )
+  # Create plotref
+  ad <- Tool(object = map, slot = "AzimuthReference")
+  # plotref.dr <- GetPlotRef(object = ad)
+  print(ad)
+  plotref.dr <- slot(object = ad, name = "plotref")
+  cm <- sparseMatrix(
+    i = 1, j = 1, x = 0, dims = c(1, nrow(x = plotref.dr)),
+    dimnames = list("placeholder", Cells(x = plotref.dr))
+  )
+  plot <- CreateSeuratObject(
+    counts = cm
+  )
+  plot[["refUMAP"]] <- plotref.dr
+  plot <- AddMetaData(object = plot, metadata = Misc(object = plotref.dr, slot = "plot.metadata"))
+  gc(verbose = FALSE)
+  return(list(
+    map = map,
+    plot = plot
+  ))
 }
