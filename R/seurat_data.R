@@ -128,6 +128,7 @@ InstalledData <- function() {
 # \describe{
 #   \item{info}{Information about the object and what's stored in it}
 #   \item{raw}{The raw form of the dataset, no other options are evaluated}
+#   \item{azimuth}{Load the dataset as an azimuth reference}
 #   \item{processed}{The proccessed data, modular loading avaible by setting other parameters}
 # }
 #'
@@ -164,10 +165,7 @@ LoadData <- function(
     choices = c('raw', 'default', 'azimuth', datasets)
   )
   if (type == 'azimuth') {
-    library(Azimuth)
-    pkg.path <- find.package(ds)
-    ref <- Azimuth::LoadReference(paste0(pkg.path, '/', type))
-    return(ref)
+    return(Azimuth::LoadReference(file.path(system.file(package=ds), type)))
   } else if (type %in% c('raw', 'default')) {
     type <- gsub(pattern = pkg.key, replacement = '', x = ds)
   } else if (type == 'final') {
