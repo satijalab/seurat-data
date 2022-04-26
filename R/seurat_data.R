@@ -291,7 +291,6 @@ LoadReference <- function(path) {
     map = 'ref.Rds',
     ann = 'idx.annoy'
   )
-
   mapref <- file.path(path, ref.names$map)
   annref <- file.path(path, ref.names$ann)
   exists <- file.exists(c(mapref, annref))
