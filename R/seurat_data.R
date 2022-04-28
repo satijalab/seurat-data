@@ -281,8 +281,8 @@ UpdateData <- function(ask = TRUE, lib.loc = NULL) {
 #'  \item{\code{plot}}{The reference \code{Seurat} object (for plotting)}
 #' }
 #'
-#' @importFrom SeuratObject Idents<- Tool Cells Misc
-#' @importFrom Seurat LoadAnnoyIndex AddMetaData CreateSeuratObject
+#' @importFrom SeuratObject Idents<- Tool Cells Misc AddMetaData CreateSeuratObject
+#' @importFrom Seurat LoadAnnoyIndex
 #' @importFrom utils download.file
 #' @importFrom Matrix sparseMatrix
 #'
