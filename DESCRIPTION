@@ -25,7 +25,10 @@ Imports:
     crayon,
     rappdirs,
     stats,
-    utils
+    utils,
+    Matrix,
+    Seurat,
+    SeuratObject
 Collate:
     'zzz.R'
     'seurat_data.R'
