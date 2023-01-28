@@ -136,6 +136,7 @@ InstalledData <- function() {
 #' @return A \code{Seurat} object with the dataset asked for
 #'
 #' @importFrom utils data
+#' @importFrom SeuratObject UpdateSeuratObject
 #'
 #' @export
 #'
@@ -176,7 +177,7 @@ LoadData <- function(
     data(list = type, package = ds, envir = e)
     # ds <- gsub(pattern = '\\.SeuratData', replacement = '', x = ds)
     # data(list = ds, envir = e)
-    return(e[[type]])
+    return(UpdateSeuratObject(e[[type]]))
   }
   stop(
     "Could not find dataset '",
