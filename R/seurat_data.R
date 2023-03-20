@@ -166,7 +166,7 @@ LoadData <- function(
     choices = c('raw', 'default', 'azimuth', datasets)
   )
   if (type == 'azimuth') {
-    return(LoadReference(file.path(system.file(package=ds), type)))
+    return(Azimuth::LoadReference(file.path(system.file(package=ds), type)))
   } else if (type %in% c('raw', 'default')) {
     type <- gsub(pattern = pkg.key, replacement = '', x = ds)
   } else if (type == 'final') {

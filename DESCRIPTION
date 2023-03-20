@@ -30,3 +30,5 @@ Imports:
 Collate:
     'zzz.R'
     'seurat_data.R'
+Suggests:
+    Azimuth
