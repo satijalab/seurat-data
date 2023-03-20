@@ -177,7 +177,23 @@ LoadData <- function(
     data(list = type, package = ds, envir = e)
     # ds <- gsub(pattern = '\\.SeuratData', replacement = '', x = ds)
     # data(list = ds, envir = e)
-    return(UpdateSeuratObject(e[[type]]))
+    e[[type]] <- UpdateSeuratObject(e[[type]])
+    assay_option <- getOption(
+      x = 'Seurat.object.assay.version',
+      default =  Seurat.options$Seurat.object.assay.version
+    )
+    if (assay_option == 'v5') {
+      update.assays <- intersect(Assays(e[[type]]), c('RNA', 'ADT'))
+      for (i in seq_along(along.with = update.assays)) {
+        suppressPackageStartupMessages(
+          expr = e[[type]][[update.assays[i]]] <- as(
+          object = e[[type]][[update.assays[i]]],
+          Class = 'Assay5'
+          )
+        )
+      }
+    }
+    return(e[[type]])
   }
   stop(
     "Could not find dataset '",
