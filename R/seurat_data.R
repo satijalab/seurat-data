@@ -136,6 +136,7 @@ InstalledData <- function() {
 #' @return A \code{Seurat} object with the dataset asked for
 #'
 #' @importFrom utils data
+#' @importFrom SeuratObject UpdateSeuratObject
 #'
 #' @export
 #'
@@ -165,7 +166,7 @@ LoadData <- function(
     choices = c('raw', 'default', 'azimuth', datasets)
   )
   if (type == 'azimuth') {
-    return(LoadReference(file.path(system.file(package=ds), type)))
+    return(Azimuth::LoadReference(file.path(system.file(package=ds), type)))
   } else if (type %in% c('raw', 'default')) {
     type <- gsub(pattern = pkg.key, replacement = '', x = ds)
   } else if (type == 'final') {
@@ -176,6 +177,22 @@ LoadData <- function(
     data(list = type, package = ds, envir = e)
     # ds <- gsub(pattern = '\\.SeuratData', replacement = '', x = ds)
     # data(list = ds, envir = e)
+    e[[type]] <- UpdateSeuratObject(e[[type]])
+    assay_option <- getOption(
+      x = 'Seurat.object.assay.version',
+      default =  Seurat.options$Seurat.object.assay.version
+    )
+    if (assay_option == 'v5') {
+      update.assays <- intersect(Assays(e[[type]]), c('RNA', 'ADT'))
+      for (i in seq_along(along.with = update.assays)) {
+        suppressPackageStartupMessages(
+          expr = e[[type]][[update.assays[i]]] <- as(
+          object = e[[type]][[update.assays[i]]],
+          Class = 'Assay5'
+          )
+        )
+      }
+    }
     return(e[[type]])
   }
   stop(
