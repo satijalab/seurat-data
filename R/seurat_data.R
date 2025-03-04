@@ -303,6 +303,7 @@ UpdateData <- function(ask = TRUE, lib.loc = NULL) {
 #' @importFrom Seurat LoadAnnoyIndex
 #' @importFrom utils download.file
 #' @importFrom Matrix sparseMatrix
+#' @importFrom methods slot
 #'
 LoadReference <- function(path) {
   ref.names <- list(
