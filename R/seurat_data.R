@@ -136,7 +136,8 @@ InstalledData <- function() {
 #' @return A \code{Seurat} object with the dataset asked for
 #'
 #' @importFrom utils data
-#' @importFrom SeuratObject UpdateSeuratObject
+#' @importFrom SeuratObject Assays UpdateSeuratObject
+#' @importFrom methods as
 #'
 #' @export
 #'
@@ -180,7 +181,7 @@ LoadData <- function(
     e[[type]] <- UpdateSeuratObject(e[[type]])
     assay_option <- getOption(
       x = 'Seurat.object.assay.version',
-      default =  Seurat.options$Seurat.object.assay.version
+      default =  'v5'
     )
     if (assay_option == 'v5') {
       update.assays <- intersect(Assays(e[[type]]), c('RNA', 'ADT'))
@@ -302,6 +303,7 @@ UpdateData <- function(ask = TRUE, lib.loc = NULL) {
 #' @importFrom Seurat LoadAnnoyIndex
 #' @importFrom utils download.file
 #' @importFrom Matrix sparseMatrix
+#' @importFrom methods slot
 #'
 LoadReference <- function(path) {
   ref.names <- list(
