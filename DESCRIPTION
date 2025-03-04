@@ -1,8 +1,10 @@
 Package: SeuratData
-Type: Package
-Title: Install and Manage Seurat Datasets
 Version: 0.2.2.9001
-Date: 2023-03-21
+Title: Install and Manage Seurat Datasets
+Description: Single cell RNA sequencing datasets can be large, consisting of matrices
+    that contain expression data for several thousand features across several thousand
+    cells. This package is designed to easily install, manage, and learn about various single-cell
+    datasets, provided Seurat objects and distributed as independent packages.
 Authors@R: c(
   person(given = 'Rahul', family = 'Satija', email = 'rsatija@nygenome.org', role = 'aut', comment = c(ORCID = '0000-0001-9448-8833')),
   person(given = 'Paul', family = 'Hoffman', email = 'phoffman@nygenome.org', role = c('aut', 'cre'), comment = c(ORCID = '0000-0002-7693-8957')),
@@ -11,16 +13,9 @@ Authors@R: c(
   person(given = "Yuhan", family = "Hao", email = "yhao@nygenome.org", role = "ctb", comment = c(ORCID = "0000-0002-1810-0822")),
   person(given = "Gesmira", family = "Molla", email = 'gmolla@nygenome.org', role = 'ctb', comment = c(ORCID = '0000-0002-8628-5056'))
   )
-Description: Single cell RNA sequencing datasets can be large, consisting of matrices
-    that contain expression data for several thousand features across several thousand
-    cells. This package is designed to easily install, manage, and learn about various single-cell
-    datasets, provided Seurat objects and distributed as independent packages.
+License: GPL-3 | file LICENSE
 URL: http://www.satijalab.org/seurat, https://github.com/satijalab/seurat-data
 BugReports: https://github.com/satijalab/seurat-data/issues
-License: GPL-3 | file LICENSE
-Encoding: UTF-8
-LazyData: true
-RoxygenNote: 7.2.3
 Depends:
     R (>= 3.5.0)
 Imports:
@@ -33,8 +28,11 @@ Imports:
     Seurat (>= 5.0.0),
     stats,
     utils
+Suggests:
+    Azimuth
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
 Collate:
     'zzz.R'
     'seurat_data.R'
-Suggests:
-    Azimuth
