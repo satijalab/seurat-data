@@ -27,6 +27,7 @@ Imports:
     cli,
     crayon,
     Matrix,
+    methods,
     rappdirs,
     SeuratObject (>= 5.0.0),
     Seurat (>= 5.0.0),
