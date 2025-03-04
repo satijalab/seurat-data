@@ -6,10 +6,7 @@
 \alias{SeuratData-package}
 \title{Install and manage Seurat datasets}
 \description{
-Single cell RNA sequencing datasets can be large, consisting of matrices
-    that contain expression data for several thousand features across several thousand
-    cells. This package is designed to easily install, manage, and learn about various single-cell
-    datasets, provided Seurat objects and distributed as independent packages.
+Single cell RNA sequencing datasets can be large, consisting of matrices that contain expression data for several thousand features across several thousand cells. This package is designed to easily install, manage, and learn about various single-cell datasets, provided Seurat objects and distributed as independent packages.
 }
 \section{Package options}{
 
@@ -46,6 +43,13 @@ Authors:
 \itemize{
   \item Rahul Satija \email{rsatija@nygenome.org} (\href{https://orcid.org/0000-0001-9448-8833}{ORCID})
   \item Andrew Butler \email{abutler@nygenome.org} (\href{https://orcid.org/0000-0003-3608-0463}{ORCID})
+}
+
+Other contributors:
+\itemize{
+  \item Austin Hartman \email{ahartman@nygenome.org} (\href{https://orcid.org/0000-0001-7278-1852}{ORCID}) [contributor]
+  \item Yuhan Hao \email{yhao@nygenome.org} (\href{https://orcid.org/0000-0002-1810-0822}{ORCID}) [contributor]
+  \item Gesmira Molla \email{gmolla@nygenome.org} (\href{https://orcid.org/0000-0002-8628-5056}{ORCID}) [contributor]
 }
 
 }
