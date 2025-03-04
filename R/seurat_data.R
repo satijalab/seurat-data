@@ -136,7 +136,7 @@ InstalledData <- function() {
 #' @return A \code{Seurat} object with the dataset asked for
 #'
 #' @importFrom utils data
-#' @importFrom SeuratObject UpdateSeuratObject
+#' @importFrom SeuratObject Assays UpdateSeuratObject
 #'
 #' @export
 #'
