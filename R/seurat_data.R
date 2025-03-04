@@ -137,6 +137,7 @@ InstalledData <- function() {
 #'
 #' @importFrom utils data
 #' @importFrom SeuratObject Assays UpdateSeuratObject
+#' @importFrom methods as
 #'
 #' @export
 #'
