@@ -27,9 +27,10 @@ Imports:
     cli,
     crayon,
     rappdirs,
+    SeuratObject (>= 5.0.0),
+    Seurat (>= 5.0.0),
     stats,
-    utils,
-    SeuratObject (>= 5.0.0)
+    utils
 Collate:
     'zzz.R'
     'seurat_data.R'
