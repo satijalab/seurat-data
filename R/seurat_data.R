@@ -181,7 +181,7 @@ LoadData <- function(
     e[[type]] <- UpdateSeuratObject(e[[type]])
     assay_option <- getOption(
       x = 'Seurat.object.assay.version',
-      default =  Seurat.options$Seurat.object.assay.version
+      default =  'v5'
     )
     if (assay_option == 'v5') {
       update.assays <- intersect(Assays(e[[type]]), c('RNA', 'ADT'))
