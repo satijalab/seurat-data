@@ -1,5 +1,5 @@
 Package: SeuratData
-Version: 0.2.2.9001
+Version: 0.2.2.9002
 Title: Install and Manage Seurat Datasets
 Description: Single cell RNA sequencing datasets can be large, consisting of matrices
     that contain expression data for several thousand features across several thousand
