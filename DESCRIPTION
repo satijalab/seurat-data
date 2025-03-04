@@ -26,6 +26,7 @@ Depends:
 Imports:
     cli,
     crayon,
+    Matrix,
     rappdirs,
     SeuratObject (>= 5.0.0),
     Seurat (>= 5.0.0),
